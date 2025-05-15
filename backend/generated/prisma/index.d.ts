@@ -2148,33 +2148,50 @@ export namespace Prisma {
   export type ConditionAvgAggregateOutputType = {
     id: number | null
     aidId: number | null
+    order: number | null
   }
 
   export type ConditionSumAggregateOutputType = {
     id: number | null
     aidId: number | null
+    order: number | null
   }
 
   export type ConditionMinAggregateOutputType = {
     id: number | null
-    description: string | null
     aidId: number | null
+    question: string | null
+    field: string | null
+    type: string | null
+    operator: string | null
+    value: string | null
+    order: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
   export type ConditionMaxAggregateOutputType = {
     id: number | null
-    description: string | null
     aidId: number | null
+    question: string | null
+    field: string | null
+    type: string | null
+    operator: string | null
+    value: string | null
+    order: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
   export type ConditionCountAggregateOutputType = {
     id: number
-    description: number
     aidId: number
+    question: number
+    field: number
+    type: number
+    operator: number
+    value: number
+    order: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -2184,33 +2201,50 @@ export namespace Prisma {
   export type ConditionAvgAggregateInputType = {
     id?: true
     aidId?: true
+    order?: true
   }
 
   export type ConditionSumAggregateInputType = {
     id?: true
     aidId?: true
+    order?: true
   }
 
   export type ConditionMinAggregateInputType = {
     id?: true
-    description?: true
     aidId?: true
+    question?: true
+    field?: true
+    type?: true
+    operator?: true
+    value?: true
+    order?: true
     createdAt?: true
     updatedAt?: true
   }
 
   export type ConditionMaxAggregateInputType = {
     id?: true
-    description?: true
     aidId?: true
+    question?: true
+    field?: true
+    type?: true
+    operator?: true
+    value?: true
+    order?: true
     createdAt?: true
     updatedAt?: true
   }
 
   export type ConditionCountAggregateInputType = {
     id?: true
-    description?: true
     aidId?: true
+    question?: true
+    field?: true
+    type?: true
+    operator?: true
+    value?: true
+    order?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -2304,8 +2338,13 @@ export namespace Prisma {
 
   export type ConditionGroupByOutputType = {
     id: number
-    description: string
     aidId: number
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt: Date
     updatedAt: Date
     _count: ConditionCountAggregateOutputType | null
@@ -2331,8 +2370,13 @@ export namespace Prisma {
 
   export type ConditionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    description?: boolean
     aidId?: boolean
+    question?: boolean
+    field?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+    order?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     aid?: boolean | AidDefaultArgs<ExtArgs>
@@ -2340,8 +2384,13 @@ export namespace Prisma {
 
   export type ConditionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    description?: boolean
     aidId?: boolean
+    question?: boolean
+    field?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+    order?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     aid?: boolean | AidDefaultArgs<ExtArgs>
@@ -2349,8 +2398,13 @@ export namespace Prisma {
 
   export type ConditionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    description?: boolean
     aidId?: boolean
+    question?: boolean
+    field?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+    order?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     aid?: boolean | AidDefaultArgs<ExtArgs>
@@ -2358,13 +2412,18 @@ export namespace Prisma {
 
   export type ConditionSelectScalar = {
     id?: boolean
-    description?: boolean
     aidId?: boolean
+    question?: boolean
+    field?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+    order?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ConditionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "description" | "aidId" | "createdAt" | "updatedAt", ExtArgs["result"]["condition"]>
+  export type ConditionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "aidId" | "question" | "field" | "type" | "operator" | "value" | "order" | "createdAt" | "updatedAt", ExtArgs["result"]["condition"]>
   export type ConditionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     aid?: boolean | AidDefaultArgs<ExtArgs>
   }
@@ -2382,8 +2441,13 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
-      description: string
       aidId: number
+      question: string
+      field: string
+      type: string
+      operator: string
+      value: string
+      order: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["condition"]>
@@ -2811,8 +2875,13 @@ export namespace Prisma {
    */
   interface ConditionFieldRefs {
     readonly id: FieldRef<"Condition", 'Int'>
-    readonly description: FieldRef<"Condition", 'String'>
     readonly aidId: FieldRef<"Condition", 'Int'>
+    readonly question: FieldRef<"Condition", 'String'>
+    readonly field: FieldRef<"Condition", 'String'>
+    readonly type: FieldRef<"Condition", 'String'>
+    readonly operator: FieldRef<"Condition", 'String'>
+    readonly value: FieldRef<"Condition", 'String'>
+    readonly order: FieldRef<"Condition", 'Int'>
     readonly createdAt: FieldRef<"Condition", 'DateTime'>
     readonly updatedAt: FieldRef<"Condition", 'DateTime'>
   }
@@ -3259,8 +3328,13 @@ export namespace Prisma {
 
   export const ConditionScalarFieldEnum: {
     id: 'id',
-    description: 'description',
     aidId: 'aidId',
+    question: 'question',
+    field: 'field',
+    type: 'type',
+    operator: 'operator',
+    value: 'value',
+    order: 'order',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -3432,8 +3506,13 @@ export namespace Prisma {
     OR?: ConditionWhereInput[]
     NOT?: ConditionWhereInput | ConditionWhereInput[]
     id?: IntFilter<"Condition"> | number
-    description?: StringFilter<"Condition"> | string
     aidId?: IntFilter<"Condition"> | number
+    question?: StringFilter<"Condition"> | string
+    field?: StringFilter<"Condition"> | string
+    type?: StringFilter<"Condition"> | string
+    operator?: StringFilter<"Condition"> | string
+    value?: StringFilter<"Condition"> | string
+    order?: IntFilter<"Condition"> | number
     createdAt?: DateTimeFilter<"Condition"> | Date | string
     updatedAt?: DateTimeFilter<"Condition"> | Date | string
     aid?: XOR<AidScalarRelationFilter, AidWhereInput>
@@ -3441,8 +3520,13 @@ export namespace Prisma {
 
   export type ConditionOrderByWithRelationInput = {
     id?: SortOrder
-    description?: SortOrder
     aidId?: SortOrder
+    question?: SortOrder
+    field?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    order?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     aid?: AidOrderByWithRelationInput
@@ -3453,8 +3537,13 @@ export namespace Prisma {
     AND?: ConditionWhereInput | ConditionWhereInput[]
     OR?: ConditionWhereInput[]
     NOT?: ConditionWhereInput | ConditionWhereInput[]
-    description?: StringFilter<"Condition"> | string
     aidId?: IntFilter<"Condition"> | number
+    question?: StringFilter<"Condition"> | string
+    field?: StringFilter<"Condition"> | string
+    type?: StringFilter<"Condition"> | string
+    operator?: StringFilter<"Condition"> | string
+    value?: StringFilter<"Condition"> | string
+    order?: IntFilter<"Condition"> | number
     createdAt?: DateTimeFilter<"Condition"> | Date | string
     updatedAt?: DateTimeFilter<"Condition"> | Date | string
     aid?: XOR<AidScalarRelationFilter, AidWhereInput>
@@ -3462,8 +3551,13 @@ export namespace Prisma {
 
   export type ConditionOrderByWithAggregationInput = {
     id?: SortOrder
-    description?: SortOrder
     aidId?: SortOrder
+    question?: SortOrder
+    field?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    order?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ConditionCountOrderByAggregateInput
@@ -3478,8 +3572,13 @@ export namespace Prisma {
     OR?: ConditionScalarWhereWithAggregatesInput[]
     NOT?: ConditionScalarWhereWithAggregatesInput | ConditionScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Condition"> | number
-    description?: StringWithAggregatesFilter<"Condition"> | string
     aidId?: IntWithAggregatesFilter<"Condition"> | number
+    question?: StringWithAggregatesFilter<"Condition"> | string
+    field?: StringWithAggregatesFilter<"Condition"> | string
+    type?: StringWithAggregatesFilter<"Condition"> | string
+    operator?: StringWithAggregatesFilter<"Condition"> | string
+    value?: StringWithAggregatesFilter<"Condition"> | string
+    order?: IntWithAggregatesFilter<"Condition"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Condition"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Condition"> | Date | string
   }
@@ -3563,7 +3662,12 @@ export namespace Prisma {
   }
 
   export type ConditionCreateInput = {
-    description: string
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt?: Date | string
     updatedAt?: Date | string
     aid: AidCreateNestedOneWithoutConditionsInput
@@ -3571,14 +3675,24 @@ export namespace Prisma {
 
   export type ConditionUncheckedCreateInput = {
     id?: number
-    description: string
     aidId: number
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ConditionUpdateInput = {
-    description?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     aid?: AidUpdateOneRequiredWithoutConditionsNestedInput
@@ -3586,30 +3700,50 @@ export namespace Prisma {
 
   export type ConditionUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
-    description?: StringFieldUpdateOperationsInput | string
     aidId?: IntFieldUpdateOperationsInput | number
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ConditionCreateManyInput = {
     id?: number
-    description: string
     aidId: number
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ConditionUpdateManyMutationInput = {
-    description?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ConditionUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
-    description?: StringFieldUpdateOperationsInput | string
     aidId?: IntFieldUpdateOperationsInput | number
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3770,8 +3904,13 @@ export namespace Prisma {
 
   export type ConditionCountOrderByAggregateInput = {
     id?: SortOrder
-    description?: SortOrder
     aidId?: SortOrder
+    question?: SortOrder
+    field?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    order?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -3779,20 +3918,31 @@ export namespace Prisma {
   export type ConditionAvgOrderByAggregateInput = {
     id?: SortOrder
     aidId?: SortOrder
+    order?: SortOrder
   }
 
   export type ConditionMaxOrderByAggregateInput = {
     id?: SortOrder
-    description?: SortOrder
     aidId?: SortOrder
+    question?: SortOrder
+    field?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    order?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type ConditionMinOrderByAggregateInput = {
     id?: SortOrder
-    description?: SortOrder
     aidId?: SortOrder
+    question?: SortOrder
+    field?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    order?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -3800,6 +3950,7 @@ export namespace Prisma {
   export type ConditionSumOrderByAggregateInput = {
     id?: SortOrder
     aidId?: SortOrder
+    order?: SortOrder
   }
 
   export type ConditionCreateNestedManyWithoutAidInput = {
@@ -3986,14 +4137,24 @@ export namespace Prisma {
   }
 
   export type ConditionCreateWithoutAidInput = {
-    description: string
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ConditionUncheckedCreateWithoutAidInput = {
     id?: number
-    description: string
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -4029,8 +4190,13 @@ export namespace Prisma {
     OR?: ConditionScalarWhereInput[]
     NOT?: ConditionScalarWhereInput | ConditionScalarWhereInput[]
     id?: IntFilter<"Condition"> | number
-    description?: StringFilter<"Condition"> | string
     aidId?: IntFilter<"Condition"> | number
+    question?: StringFilter<"Condition"> | string
+    field?: StringFilter<"Condition"> | string
+    type?: StringFilter<"Condition"> | string
+    operator?: StringFilter<"Condition"> | string
+    value?: StringFilter<"Condition"> | string
+    order?: IntFilter<"Condition"> | number
     createdAt?: DateTimeFilter<"Condition"> | Date | string
     updatedAt?: DateTimeFilter<"Condition"> | Date | string
   }
@@ -4095,27 +4261,47 @@ export namespace Prisma {
 
   export type ConditionCreateManyAidInput = {
     id?: number
-    description: string
+    question: string
+    field: string
+    type: string
+    operator: string
+    value: string
+    order: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ConditionUpdateWithoutAidInput = {
-    description?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ConditionUncheckedUpdateWithoutAidInput = {
     id?: IntFieldUpdateOperationsInput | number
-    description?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ConditionUncheckedUpdateManyWithoutAidInput = {
     id?: IntFieldUpdateOperationsInput | number
-    description?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    field?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

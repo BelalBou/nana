@@ -27,7 +27,14 @@ export class AidService {
     description: string;
     region: string;
     link: string;
-    conditions?: { description: string }[];
+    conditions?: {
+      question: string;
+      field: string;
+      type: string;
+      operator: string;
+      value: string;
+      order: number;
+    }[];
   }) {
     return this.prisma.aid.create({
       data: {

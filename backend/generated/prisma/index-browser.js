@@ -133,8 +133,13 @@ exports.Prisma.AidScalarFieldEnum = {
 
 exports.Prisma.ConditionScalarFieldEnum = {
   id: 'id',
-  description: 'description',
   aidId: 'aidId',
+  question: 'question',
+  field: 'field',
+  type: 'type',
+  operator: 'operator',
+  value: 'value',
+  order: 'order',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
