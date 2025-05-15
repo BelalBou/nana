@@ -120,9 +120,39 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.AidScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  region: 'region',
+  link: 'link',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConditionScalarFieldEnum = {
+  id: 'id',
+  description: 'description',
+  aidId: 'aidId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
 
 exports.Prisma.ModelName = {
-
+  Aid: 'Aid',
+  Condition: 'Condition'
 };
 
 /**

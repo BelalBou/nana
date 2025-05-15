@@ -13,3 +13,24 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Aid {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  region      String
+  link        String
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  conditions  Condition[]
+}
+
+model Condition {
+  id          Int      @id @default(autoincrement())
+  description String
+  aid         Aid      @relation(fields: [aidId], references: [id])
+  aidId       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
