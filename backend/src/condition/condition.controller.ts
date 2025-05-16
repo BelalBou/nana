@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ConditionService } from './condition.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('conditions')
 export class ConditionController {
@@ -18,6 +19,7 @@ export class ConditionController {
     return this.conditionService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createConditionDto: {
     aidId: number;
@@ -31,6 +33,7 @@ export class ConditionController {
     return this.conditionService.create(createConditionDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -46,6 +49,7 @@ export class ConditionController {
     return this.conditionService.update(+id, updateConditionDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.conditionService.remove(+id);

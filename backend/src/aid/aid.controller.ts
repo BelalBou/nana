@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { AidService } from './aid.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('aids')
 export class AidController {
@@ -15,6 +16,7 @@ export class AidController {
     return this.aidService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createAidDto: {
     title: string;
@@ -33,6 +35,7 @@ export class AidController {
     return this.aidService.create(createAidDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -47,6 +50,7 @@ export class AidController {
     return this.aidService.update(+id, updateAidDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.aidService.remove(+id);
