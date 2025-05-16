@@ -1,10 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Container } from '@mui/material';
+import { Box, Container, CssBaseline } from '@mui/material';
 import EligibilityForm from './components/eligibility/EligibilityForm';
 import AidList from './components/admin/AidList';
 import LoginForm from './components/admin/LoginForm';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -15,8 +17,13 @@ const AppContent = () => {
   const { login } = useAuth();
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      minHeight: '100vh'
+    }}>
+      <Header />
+      <Container maxWidth="lg" sx={{ flex: 1, py: 4 }}>
         <Routes>
           {/* Route publique - Formulaire d'éligibilité */}
           <Route path="/" element={<EligibilityForm onEligibilityResult={() => {}} />} />
@@ -32,14 +39,16 @@ const AppContent = () => {
             } 
           />
         </Routes>
-      </Box>
-    </Container>
+      </Container>
+      <Footer />
+    </Box>
   );
 };
 
 const App = () => {
   return (
     <Router>
+      <CssBaseline />
       <AuthProvider>
         <AppContent />
       </AuthProvider>

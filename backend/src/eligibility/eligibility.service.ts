@@ -37,7 +37,10 @@ export class EligibilityService {
   }
 
   private checkCondition(condition: Condition, answers: Record<string, any>): boolean {
-    const answer = answers[condition.field];
+    // Normaliser la casse du champ
+    const normalizedField = condition.field.toLowerCase();
+    const answer = answers[normalizedField] || answers[condition.field];
+    
     if (answer === undefined) {
       console.log(`Champ ${condition.field} non trouvé dans les réponses`);
       return false;
@@ -63,38 +66,82 @@ export class EligibilityService {
     });
 
     let result = false;
-    switch (condition.operator) {
+    // Normaliser l'opérateur
+    const operator = condition.operator.toLowerCase().replace(/\s+/g, '');
+    console.log('Opérateur normalisé:', operator);
+
+    switch (operator) {
       case '==':
+      case 'equals':
+      case 'equal':
         result = convertedAnswer === convertedValue;
+        console.log('Comparaison égalité:', { convertedAnswer, convertedValue, result });
         break;
+
       case '>':
+      case 'greaterthan':
+      case 'greater':
         result = Number(convertedAnswer) > Number(convertedValue);
+        console.log('Comparaison supérieur:', { convertedAnswer, convertedValue, result });
         break;
+
       case '<':
+      case 'lessthan':
+      case 'less':
         result = Number(convertedAnswer) < Number(convertedValue);
+        console.log('Comparaison inférieur:', { convertedAnswer, convertedValue, result });
         break;
+
       case '>=':
+      case 'greaterthanorequal':
+      case 'greaterorequal':
         result = Number(convertedAnswer) >= Number(convertedValue);
+        console.log('Comparaison supérieur ou égal:', { convertedAnswer, convertedValue, result });
         break;
+
       case '<=':
+      case 'lessthanorequal':
+      case 'lessorequal':
         result = Number(convertedAnswer) <= Number(convertedValue);
+        console.log('Comparaison inférieur ou égal:', { convertedAnswer, convertedValue, result });
         break;
+
+      case '!=':
+      case 'notequals':
+      case 'notequal':
+        result = convertedAnswer !== convertedValue;
+        console.log('Comparaison différent:', { convertedAnswer, convertedValue, result });
+        break;
+
       case 'between':
-        if (condition.field === 'age') {
+        if (condition.field.toLowerCase() === 'age') {
           const [minAge, maxAge] = condition.value.split(',').map(Number);
           const age = Number(convertedAnswer);
           result = age >= minAge && age <= maxAge;
+          console.log('Comparaison entre:', { age, minAge, maxAge, result });
         }
         break;
+
       case 'includes':
+      case 'contains':
         result = condition.value.split(',').includes(String(convertedAnswer));
+        console.log('Vérification inclusion:', { 
+          convertedAnswer, 
+          possibleValues: condition.value.split(','), 
+          result 
+        });
         break;
+
+      default:
+        console.error('Opérateur non reconnu:', operator);
+        return false;
     }
 
-    console.log('Résultat de la condition:', {
+    console.log('Résultat final de la condition:', {
       field: condition.field,
       result,
-      operator: condition.operator
+      operator: condition.operator,
+      normalizedOperator: operator
     });
 
     return result;

@@ -99,7 +99,13 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
       return;
     }
 
-    const allConditions = aids
+    // Si on a déjà répondu à la question de région, on filtre les aides par région
+    const selectedRegion = answers.region;
+    const filteredAids = selectedRegion 
+      ? aids.filter(aid => aid.region === selectedRegion)
+      : aids;
+
+    const allConditions = filteredAids
       .flatMap(aid => aid.conditions)
       .reduce((acc, condition) => {
         if (!acc.find(c => c.field === condition.field)) {
@@ -119,8 +125,21 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
       order: 0
     };
 
-    setQuestions([regionQuestion, ...allConditions]);
-  }, [aids, loading, error]);
+    // Si on a déjà répondu à la question de région, on ne la montre plus
+    setQuestions(selectedRegion ? allConditions : [regionQuestion, ...allConditions]);
+  }, [aids, loading, error, answers.region]);
+
+  // Réinitialiser les réponses et le step quand la région change
+  useEffect(() => {
+    if (answers.region) {
+      // Garder uniquement la réponse de la région
+      const regionAnswer = answers.region;
+      setAnswers({ region: regionAnswer });
+      setCurrentStep(0);
+      setEligibleAids([]);
+      setHasChecked(false);
+    }
+  }, [answers.region]);
 
   // Vérifier automatiquement l'éligibilité quand toutes les questions sont répondues
   useEffect(() => {
