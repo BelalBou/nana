@@ -77,8 +77,14 @@ export class AidService {
   }
 
   async remove(id: number) {
+    // D'abord supprimer toutes les conditions associées
+    await this.prisma.condition.deleteMany({
+      where: { aidId: id }
+    });
+
+    // Ensuite supprimer l'aide
     return this.prisma.aid.delete({
-      where: { id },
+      where: { id }
     });
   }
 
