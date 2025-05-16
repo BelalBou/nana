@@ -17,7 +17,7 @@ interface QuestionFormProps {
 }
 
 const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
-  const [value, setValue] = useState<any>('');
+  const [value, setValue] = useState<any>(condition.type === 'boolean' ? false : '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +70,12 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
     }
   };
 
+  const isButtonDisabled = () => {
+    if (condition.type === 'boolean') return false;
+    if (condition.type === 'radio') return value === '';
+    return value === '' || value === undefined;
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
       <Typography variant="h6" gutterBottom>
@@ -83,7 +89,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
         variant="contained"
         color="primary"
         sx={{ mt: 3 }}
-        disabled={value === ''}
+        disabled={isButtonDisabled()}
       >
         Suivant
       </Button>
