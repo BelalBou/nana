@@ -1,24 +1,10 @@
 import React, { useState } from 'react';
-import { Container, CssBaseline, ThemeProvider, createTheme, Box, Tabs, Tab } from '@mui/material';
+import { Box, Tabs, Tab, Button } from '@mui/material';
+import { Logout as LogoutIcon } from '@mui/icons-material';
 import EligibilityForm from './components/eligibility/EligibilityForm';
-import EligibilityResults from './components/eligibility/EligibilityResults';
 import AidList from './components/admin/AidList';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-  },
-});
-
-interface Aid {
-  id: number;
-  title: string;
-  description: string;
-  region: string;
-  link: string;
-}
+import LoginForm from './components/admin/LoginForm';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -37,44 +23,53 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
 
-function App() {
-  const [eligibleAids, setEligibleAids] = useState<Aid[]>([]);
+function AppContent() {
   const [tabValue, setTabValue] = useState(0);
+  const { isAuthenticated, logout, login } = useAuth();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
+  if (!isAuthenticated) {
+    return <LoginForm onLoginSuccess={login} />;
+  }
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Container>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
-          <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab label="Vérification d'éligibilité" />
-            <Tab label="Administration" />
-          </Tabs>
-        </Box>
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Tabs value={tabValue} onChange={handleTabChange}>
+          <Tab label="Vérification d'éligibilité" />
+          <Tab label="Administration" />
+        </Tabs>
+        <Button
+          startIcon={<LogoutIcon />}
+          onClick={logout}
+          sx={{ mr: 2 }}
+        >
+          Déconnexion
+        </Button>
+      </Box>
+      <TabPanel value={tabValue} index={0}>
+        <EligibilityForm onEligibilityResult={(aids) => console.log(aids)} />
+      </TabPanel>
+      <TabPanel value={tabValue} index={1}>
+        <AidList />
+      </TabPanel>
+    </Box>
+  );
+}
 
-        <TabPanel value={tabValue} index={0}>
-          <EligibilityForm onEligibilityResult={setEligibleAids} />
-          {eligibleAids.length > 0 && <EligibilityResults eligibleAids={eligibleAids} />}
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          <AidList />
-        </TabPanel>
-      </Container>
-    </ThemeProvider>
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
