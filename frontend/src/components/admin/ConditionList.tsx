@@ -57,16 +57,16 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
     aidId: aidId
   });
 
-  const fetchConditions = useCallback(async () => {
+  const fetchConditions = async () => {
     try {
-      const response = await axios.get<Condition[]>(`http://localhost:4000/aids/${aidId}/conditions`);
+      const response = await axios.get<Condition[]>(`http://localhost:4000/conditions?aidId=${aidId}`);
       setConditions(response.data);
       setLoading(false);
     } catch (err) {
       setError('Erreur lors du chargement des conditions');
       setLoading(false);
     }
-  }, [aidId]);
+  };
 
   useEffect(() => {
     fetchConditions();

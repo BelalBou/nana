@@ -36,9 +36,13 @@ export class AidService {
       order: number;
     }[];
   }) {
+    // Normaliser la valeur de la région
+    const normalizedRegion = this.normalizeRegion(data.region);
+    
     return this.prisma.aid.create({
       data: {
         ...data,
+        region: normalizedRegion,
         conditions: {
           create: data.conditions,
         },
@@ -56,8 +60,13 @@ export class AidService {
     link?: string;
     active?: boolean;
   }) {
-    // On ne met à jour que les champs de l'aide, pas les conditions
-    const { conditions, ...aidData } = data as any;
+    // Normaliser la valeur de la région si elle est fournie
+    const normalizedData = {
+      ...data,
+      region: data.region ? this.normalizeRegion(data.region) : undefined,
+    };
+
+    const { conditions, ...aidData } = normalizedData as any;
     return this.prisma.aid.update({
       where: { id },
       data: aidData,
@@ -71,5 +80,17 @@ export class AidService {
     return this.prisma.aid.delete({
       where: { id },
     });
+  }
+
+  private normalizeRegion(region: string): string {
+    const regionMap: { [key: string]: string } = {
+      'France': 'france',
+      'Bruxelles': 'belgique_bruxelles',
+      'Flandre': 'belgique_flandre',
+      'Wallonie': 'belgique_wallonie',
+      'Bruxelles-Capitale': 'belgique_bruxelles',
+    };
+
+    return regionMap[region] || region;
   }
 } 
