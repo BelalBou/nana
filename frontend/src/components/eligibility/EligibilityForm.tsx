@@ -39,7 +39,7 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
 
   const fetchAids = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/aids');
+      const response = await axios.get<Aid[]>('http://localhost:4000/aids');
       console.log('Réponse API:', response.data);
       setAids(response.data);
       setLoading(false);
@@ -59,7 +59,7 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:4000/eligibility/check', { answers });
+      const response = await axios.post<Aid[]>('http://localhost:4000/eligibility/check', { answers });
       onEligibilityResult(response.data);
     } catch (err) {
       setError('Erreur lors de la vérification de l\'éligibilité');

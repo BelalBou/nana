@@ -1,0 +1,207 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Button,
+  Switch,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import axios from 'axios';
+import AidForm from './AidForm';
+
+interface Aid {
+  id: number;
+  title: string;
+  description: string;
+  region: string;
+  link: string;
+  active: boolean;
+}
+
+const AidList: React.FC = () => {
+  const [aids, setAids] = useState<Aid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedAid, setSelectedAid] = useState<Aid | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [aidToDelete, setAidToDelete] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchAids();
+  }, []);
+
+  const fetchAids = async () => {
+    try {
+      const response = await axios.get<Aid[]>('http://localhost:4000/aids');
+      setAids(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Erreur lors du chargement des aides');
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (aid: Aid) => {
+    setSelectedAid(aid);
+    setOpenForm(true);
+  };
+
+  const handleDelete = (id: number) => {
+    setAidToDelete(id);
+    setOpenDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!aidToDelete) return;
+
+    try {
+      await axios.delete(`http://localhost:4000/aids/${aidToDelete}`);
+      setAids(aids.filter(aid => aid.id !== aidToDelete));
+      setOpenDeleteDialog(false);
+      setAidToDelete(null);
+    } catch (err) {
+      setError('Erreur lors de la suppression de l\'aide');
+    }
+  };
+
+  const handleToggleActive = async (aid: Aid) => {
+    try {
+      await axios.patch(`http://localhost:4000/aids/${aid.id}`, {
+        active: !aid.active
+      });
+      setAids(aids.map(a => 
+        a.id === aid.id ? { ...a, active: !a.active } : a
+      ));
+    } catch (err) {
+      setError('Erreur lors de la modification du statut');
+    }
+  };
+
+  const handleFormSubmit = async (aidData: Partial<Aid>) => {
+    try {
+      if (selectedAid) {
+        await axios.patch(`http://localhost:4000/aids/${selectedAid.id}`, aidData);
+        setAids(aids.map(a => 
+          a.id === selectedAid.id ? { ...a, ...aidData } : a
+        ));
+      } else {
+        const response = await axios.post<Aid>('http://localhost:4000/aids', aidData);
+        setAids([...aids, response.data]);
+      }
+      setOpenForm(false);
+      setSelectedAid(null);
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde de l\'aide');
+    }
+  };
+
+  if (loading) {
+    return <Typography>Chargement...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">Gestion des Aides</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setSelectedAid(null);
+            setOpenForm(true);
+          }}
+        >
+          Nouvelle Aide
+        </Button>
+      </Box>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Titre</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Région</TableCell>
+              <TableCell>Lien</TableCell>
+              <TableCell>Statut</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {aids.map((aid) => (
+              <TableRow key={aid.id}>
+                <TableCell>{aid.title}</TableCell>
+                <TableCell>{aid.description}</TableCell>
+                <TableCell>{aid.region}</TableCell>
+                <TableCell>
+                  <a href={aid.link} target="_blank" rel="noopener noreferrer">
+                    Voir le lien
+                  </a>
+                </TableCell>
+                <TableCell>
+                  <Switch
+                    checked={aid.active}
+                    onChange={() => handleToggleActive(aid)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleEdit(aid)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleDelete(aid.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {selectedAid ? 'Modifier l\'aide' : 'Nouvelle aide'}
+        </DialogTitle>
+        <DialogContent>
+          <AidForm
+            aid={selectedAid}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setOpenForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <DialogTitle>Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          Êtes-vous sûr de vouloir supprimer cette aide ?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)}>Annuler</Button>
+          <Button onClick={confirmDelete} color="error">
+            Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default AidList; 
