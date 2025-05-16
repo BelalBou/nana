@@ -17,9 +17,10 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import axios from 'axios';
 import AidForm from './AidForm';
+import ConditionList from './ConditionList';
 
 interface Aid {
   id: number;
@@ -38,6 +39,7 @@ const AidList: React.FC = () => {
   const [selectedAid, setSelectedAid] = useState<Aid | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [aidToDelete, setAidToDelete] = useState<number | null>(null);
+  const [selectedAidForConditions, setSelectedAidForConditions] = useState<number | null>(null);
 
   useEffect(() => {
     fetchAids();
@@ -118,62 +120,80 @@ const AidList: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Gestion des Aides</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setSelectedAid(null);
-            setOpenForm(true);
-          }}
-        >
-          Nouvelle Aide
-        </Button>
-      </Box>
+      {selectedAidForConditions ? (
+        <>
+          <Button
+            startIcon={<EditIcon />}
+            onClick={() => setSelectedAidForConditions(null)}
+            sx={{ mb: 2 }}
+          >
+            Retour aux aides
+          </Button>
+          <ConditionList aidId={selectedAidForConditions} />
+        </>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">Gestion des Aides</Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedAid(null);
+                setOpenForm(true);
+              }}
+            >
+              Nouvelle Aide
+            </Button>
+          </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Titre</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Région</TableCell>
-              <TableCell>Lien</TableCell>
-              <TableCell>Statut</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {aids.map((aid) => (
-              <TableRow key={aid.id}>
-                <TableCell>{aid.title}</TableCell>
-                <TableCell>{aid.description}</TableCell>
-                <TableCell>{aid.region}</TableCell>
-                <TableCell>
-                  <a href={aid.link} target="_blank" rel="noopener noreferrer">
-                    Voir le lien
-                  </a>
-                </TableCell>
-                <TableCell>
-                  <Switch
-                    checked={aid.active}
-                    onChange={() => handleToggleActive(aid)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(aid)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(aid.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Titre</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Région</TableCell>
+                  <TableCell>Lien</TableCell>
+                  <TableCell>Statut</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {aids.map((aid) => (
+                  <TableRow key={aid.id}>
+                    <TableCell>{aid.title}</TableCell>
+                    <TableCell>{aid.description}</TableCell>
+                    <TableCell>{aid.region}</TableCell>
+                    <TableCell>
+                      <a href={aid.link} target="_blank" rel="noopener noreferrer">
+                        Voir le lien
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={aid.active}
+                        onChange={() => handleToggleActive(aid)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleEdit(aid)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(aid.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                      <IconButton onClick={() => setSelectedAidForConditions(aid.id)}>
+                        <SettingsIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
 
       <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="md" fullWidth>
         <DialogTitle>
