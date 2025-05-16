@@ -195,9 +195,7 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
         Vérification d'éligibilité
       </Typography>
       
-      {eligibleAids.length > 0 ? (
-        <EligibilityResults eligibleAids={eligibleAids} />
-      ) : currentStep < questions.length ? (
+      {currentStep < questions.length ? (
         <QuestionForm
           condition={questions[currentStep]}
           onAnswer={(value) => {
@@ -205,13 +203,15 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
             setCurrentStep(prev => prev + 1);
           }}
         />
-      ) : (
+      ) : isChecking ? (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" gutterBottom>
             Vérification de votre éligibilité...
           </Typography>
           <CircularProgress />
         </Box>
+      ) : (
+        <EligibilityResults eligibleAids={eligibleAids} />
       )}
     </Box>
   );

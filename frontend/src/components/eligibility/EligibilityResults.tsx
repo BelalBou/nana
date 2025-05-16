@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Card, CardContent, CardActions, Button, Alert, Paper } from '@mui/material';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import InfoIcon from '@mui/icons-material/Info';
 
 interface Aid {
   id: number;
@@ -17,24 +18,52 @@ interface EligibilityResultsProps {
 const EligibilityResults: React.FC<EligibilityResultsProps> = ({ eligibleAids }) => {
   if (eligibleAids.length === 0) {
     return (
-      <Paper elevation={3} sx={{ p: 4, mt: 4, textAlign: 'center' }}>
+      <Paper elevation={3} sx={{ p: 4, mt: 4, textAlign: 'center', maxWidth: 800, mx: 'auto' }}>
         <SentimentDissatisfiedIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-        <Typography variant="h5" gutterBottom color="text.secondary">
-          Aucune aide trouvée pour votre situation
+        <Typography variant="h4" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+          Aucune aide disponible pour votre situation
         </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          Nous n'avons pas trouvé d'aides correspondant à votre situation dans votre région.
-        </Typography>
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Voici quelques suggestions :
+        
+        <Box sx={{ 
+          bgcolor: 'info.light', 
+          color: 'info.contrastText', 
+          p: 2, 
+          borderRadius: 1,
+          mb: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <InfoIcon />
+          <Typography>
+            Malheureusement, nous n'avons pas trouvé d'aides correspondant à votre situation dans votre région.
           </Typography>
-          <ul style={{ textAlign: 'left', display: 'inline-block' }}>
-            <li>Vérifiez vos réponses</li>
-            <li>Revenez plus tard, de nouvelles aides pourraient être ajoutées</li>
-            <li>Contactez directement les services sociaux de votre région</li>
-            <li>Consultez les sites officiels de votre région pour d'autres aides potentielles</li>
-          </ul>
+        </Box>
+
+        <Box sx={{ mt: 4, textAlign: 'left', maxWidth: 600, mx: 'auto' }}>
+          <Typography variant="h6" gutterBottom color="text.secondary">
+            Que faire maintenant ?
+          </Typography>
+          <Box component="ul" sx={{ pl: 2 }}>
+            <Typography component="li" sx={{ mb: 2 }}>
+              <strong>Vérifiez vos réponses</strong> - Assurez-vous que toutes les informations sont correctes
+            </Typography>
+            <Typography component="li" sx={{ mb: 2 }}>
+              <strong>Revenez plus tard</strong> - De nouvelles aides pourraient être ajoutées prochainement
+            </Typography>
+            <Typography component="li" sx={{ mb: 2 }}>
+              <strong>Contactez les services sociaux</strong> - Ils pourront vous orienter vers d'autres aides non répertoriées
+            </Typography>
+            <Typography component="li" sx={{ mb: 2 }}>
+              <strong>Consultez les sites officiels</strong> - Votre région propose peut-être d'autres types d'aides
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+          <Typography variant="body2" color="text.secondary">
+            Besoin d'aide ? N'hésitez pas à contacter notre service client
+          </Typography>
         </Box>
       </Paper>
     );
