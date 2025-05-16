@@ -89,6 +89,10 @@ export class AidService {
       'Flandre': 'belgique_flandre',
       'Wallonie': 'belgique_wallonie',
       'Bruxelles-Capitale': 'belgique_bruxelles',
+      'france': 'france',
+      'belgique_bruxelles': 'belgique_bruxelles',
+      'belgique_flandre': 'belgique_flandre',
+      'belgique_wallonie': 'belgique_wallonie'
     };
 
     return regionMap[region] || region;

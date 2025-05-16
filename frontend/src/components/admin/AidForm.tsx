@@ -59,7 +59,8 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const { id, ...dataToSubmit } = formData;
+    onSubmit(aid ? formData : dataToSubmit);
   };
 
   return (
