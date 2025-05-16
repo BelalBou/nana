@@ -6,7 +6,7 @@ async function bootstrap() {
   
   // Configuration CORS
   app.enableCors({
-    origin: 'http://localhost:3000', // URL du frontend React
+    origin: true, // Accepte toutes les origines en développement
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

@@ -18,6 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (token) {
       localStorage.setItem('adminToken', token);
+      // Configuration d'axios pour inclure le token dans toutes les requêtes
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       localStorage.removeItem('adminToken');

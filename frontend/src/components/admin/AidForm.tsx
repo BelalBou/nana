@@ -5,6 +5,10 @@ import {
   Button,
   FormControlLabel,
   Switch,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 
 interface Aid {
@@ -37,11 +41,19 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
     }
   }, [aid]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: name === 'active' ? checked : value,
+    }));
+  };
+
+  const handleSelectChange = (e: any) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
@@ -63,7 +75,7 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
             label="Titre"
             name="title"
             value={formData.title}
-            onChange={handleChange}
+            onChange={handleInputChange}
             required
           />
         </Box>
@@ -73,7 +85,7 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
             label="Description"
             name="description"
             value={formData.description}
-            onChange={handleChange}
+            onChange={handleInputChange}
             multiline
             rows={4}
             required
@@ -84,20 +96,27 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: 3,
         }}>
-          <TextField
-            fullWidth
-            label="Région"
-            name="region"
-            value={formData.region}
-            onChange={handleChange}
-            required
-          />
+          <FormControl fullWidth>
+            <InputLabel>Région</InputLabel>
+            <Select
+              name="region"
+              value={formData.region}
+              onChange={handleSelectChange}
+              label="Région"
+              required
+            >
+              <MenuItem value="france">France</MenuItem>
+              <MenuItem value="belgique_flandre">Belgique (Flandre)</MenuItem>
+              <MenuItem value="belgique_wallonie">Belgique (Wallonie)</MenuItem>
+              <MenuItem value="belgique_bruxelles">Belgique (Bruxelles-Capitale)</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             fullWidth
             label="Lien"
             name="link"
             value={formData.link}
-            onChange={handleChange}
+            onChange={handleInputChange}
             required
           />
         </Box>
@@ -106,7 +125,7 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
             control={
               <Switch
                 checked={formData.active}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 name="active"
               />
             }

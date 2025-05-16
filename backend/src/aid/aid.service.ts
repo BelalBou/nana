@@ -56,9 +56,11 @@ export class AidService {
     link?: string;
     active?: boolean;
   }) {
+    // On ne met à jour que les champs de l'aide, pas les conditions
+    const { conditions, ...aidData } = data as any;
     return this.prisma.aid.update({
       where: { id },
-      data,
+      data: aidData,
       include: {
         conditions: true,
       },
