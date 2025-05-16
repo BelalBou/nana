@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Button } from '@mui/material';
 import QuestionForm from './QuestionForm';
+import EligibilityResults from './EligibilityResults';
 
 interface Condition {
   id: number;
@@ -32,6 +33,7 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentStep, setCurrentStep] = useState(0);
+  const [eligibleAids, setEligibleAids] = useState<Aid[]>([]);
 
   useEffect(() => {
     fetchAids();
@@ -60,6 +62,7 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
   const handleSubmit = async () => {
     try {
       const response = await axios.post<Aid[]>('http://localhost:4000/eligibility/check', { answers });
+      setEligibleAids(response.data);
       onEligibilityResult(response.data);
     } catch (err) {
       setError('Erreur lors de la vérification de l\'éligibilité');
@@ -102,7 +105,9 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
         Vérification d'éligibilité
       </Typography>
       
-      {currentStep < allConditions.length ? (
+      {eligibleAids.length > 0 ? (
+        <EligibilityResults eligibleAids={eligibleAids} />
+      ) : currentStep < allConditions.length ? (
         <QuestionForm
           condition={allConditions[currentStep]}
           onAnswer={(value) => {
@@ -115,9 +120,13 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
           <Typography variant="h6" gutterBottom>
             Vérification de votre éligibilité...
           </Typography>
-          <button onClick={handleSubmit}>
+          <Button 
+            variant="contained" 
+            onClick={handleSubmit}
+            fullWidth
+          >
             Vérifier mon éligibilité
-          </button>
+          </Button>
         </Box>
       )}
     </Box>
