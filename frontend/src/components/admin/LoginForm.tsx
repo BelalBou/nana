@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   TextField,
@@ -14,6 +15,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +33,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       });
       
       onLoginSuccess(response.data.access_token);
+      navigate('/admin');
     } catch (err) {
       setError('Identifiants invalides');
     } finally {

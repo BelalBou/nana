@@ -1,76 +1,50 @@
-import React, { useState } from 'react';
-import { Box, Tabs, Tab, Button } from '@mui/material';
-import { Logout as LogoutIcon } from '@mui/icons-material';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Box, Container } from '@mui/material';
 import EligibilityForm from './components/eligibility/EligibilityForm';
 import AidList from './components/admin/AidList';
 import LoginForm from './components/admin/LoginForm';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" />;
+};
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
-function AppContent() {
-  const [tabValue, setTabValue] = useState(0);
-  const { isAuthenticated, logout, login } = useAuth();
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  if (!isAuthenticated) {
-    return <LoginForm onLoginSuccess={login} />;
-  }
+const AppContent = () => {
+  const { login } = useAuth();
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label="Vérification d'éligibilité" />
-          <Tab label="Administration" />
-        </Tabs>
-        <Button
-          startIcon={<LogoutIcon />}
-          onClick={logout}
-          sx={{ mr: 2 }}
-        >
-          Déconnexion
-        </Button>
+    <Container maxWidth="lg">
+      <Box sx={{ my: 4 }}>
+        <Routes>
+          {/* Route publique - Formulaire d'éligibilité */}
+          <Route path="/" element={<EligibilityForm onEligibilityResult={() => {}} />} />
+          
+          {/* Routes admin */}
+          <Route path="/admin/login" element={<LoginForm onLoginSuccess={login} />} />
+          <Route 
+            path="/admin" 
+            element={
+              <AdminRoute>
+                <AidList />
+              </AdminRoute>
+            } 
+          />
+        </Routes>
       </Box>
-      <TabPanel value={tabValue} index={0}>
-        <EligibilityForm onEligibilityResult={(aids) => console.log(aids)} />
-      </TabPanel>
-      <TabPanel value={tabValue} index={1}>
-        <AidList />
-      </TabPanel>
-    </Box>
+    </Container>
   );
-}
+};
 
-function App() {
+const App = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
-}
+};
 
 export default App;
