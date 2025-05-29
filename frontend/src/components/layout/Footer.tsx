@@ -42,20 +42,20 @@ const Footer: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <EmailIcon color="action" />
-                <Link href="mailto:contact@aides-immobilieres.fr" color="inherit">
-                  contact@aides-immobilieres.fr
+                <Link href="mailto:nastassia_dmrtds@outlook.com" color="inherit">
+                  nastassia_dmrtds@outlook.com
                 </Link>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PhoneIcon color="action" />
                 <Link href="tel:+33123456789" color="inherit">
-                  01 23 45 67 89
+                +32 4 97 19 90 08
                 </Link>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <LocationOnIcon color="action" />
                 <Typography variant="body2" color="text.secondary">
-                  123 rue de l'Immobilier, 75000 Paris
+                  100 Rue Jules Cerexhes, 4800 Verviers, Belgique
                 </Typography>
               </Box>
             </Box>

@@ -83,7 +83,33 @@ const SmartEligibilityForm: React.FC = () => {
     };
     
     setAnswers(newAnswers);
-    await fetchNextQuestion();
+    
+    // Appeler fetchNextQuestion sans incrementer currentQuestionIndex ici
+    try {
+      setLoading(true);
+      const response = await axios.post<NextQuestionResponse>('http://localhost:4000/eligibility/next-question', { 
+        answers: newAnswers 
+      });
+      
+      if (response.data && response.data.question) {
+        setCurrentStep({
+          question: response.data.question,
+          remainingAids: response.data.remainingAids || 0
+        });
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else {
+        // Plus de questions, récupérer les résultats finaux
+        const resultsResponse = await axios.post<Aid[]>('http://localhost:4000/eligibility/results', { 
+          answers: newAnswers 
+        });
+        setFinalResults(resultsResponse.data);
+        setIsComplete(true);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startQuestionnaire = () => {
@@ -220,24 +246,86 @@ const SmartEligibilityForm: React.FC = () => {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         {aid.description}
                       </Typography>
-                      {aid.link && (
+                      
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                        {aid.link && (
+                          <Button 
+                            variant="contained" 
+                            href={aid.link} 
+                            target="_blank"
+                            size="small"
+                          >
+                            Site officiel
+                          </Button>
+                        )}
                         <Button 
-                          variant="contained" 
-                          href={aid.link} 
-                          target="_blank"
+                          variant="outlined" 
+                          href={`mailto:nastassia_dmrtds@outlook.com?subject=Demande d'informations - Aide immobilière&body=Bonjour, je souhaiterais avoir plus d'informations concernant l'aide : ${aid.title}`}
                           size="small"
                         >
-                          En savoir plus
+                          Contacter par email
                         </Button>
-                      )}
+                      </Box>
+                      
+                      <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        💡 Pour plus d'informations personnalisées, contactez nastassia_dmrtds@outlook.com
+                      </Typography>
                     </CardContent>
                   </Card>
                 ))}
+                
+                {/* Section contact globale */}
+                <Alert severity="info" sx={{ mt: 3 }}>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>Besoin d'aide personnalisée ?</strong>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2 }}>
+                    Notre équipe peut vous accompagner dans vos démarches pour maximiser vos chances d'obtenir ces aides.
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button 
+                      variant="contained" 
+                      color="info"
+                      href="mailto:nastassia_dmrtds@outlook.com?subject=Demande d'accompagnement - Aides immobilières&body=Bonjour, je souhaiterais être accompagné(e) dans mes démarches pour obtenir les aides immobilières suivantes :"
+                      size="small"
+                    >
+                      📧 Contacter un conseiller
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      color="info"
+                      href="tel:+33123456789"
+                      size="small"
+                    >
+                      📞 +32 4 97 19 90 08
+                    </Button>
+                  </Box>
+                </Alert>
               </>
             ) : (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Désolé, aucune aide ne correspond à votre situation actuelle.
-              </Alert>
+              <>
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  Désolé, aucune aide ne correspond à votre situation actuelle selon nos critères.
+                </Alert>
+                
+                <Alert severity="warning" sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>Ne perdez pas espoir !</strong>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2 }}>
+                    Il existe peut-être d'autres aides spécifiques ou des conditions particulières que nous n'avons pas couvertes. 
+                    Notre équipe peut analyser votre situation en détail.
+                  </Typography>
+                  <Button 
+                    variant="contained" 
+                    color="warning"
+                    href="mailto:nastassia_dmrtds@outlook.com?subject=Analyse personnalisée - Aides immobilières&body=Bonjour, aucune aide ne correspond à ma situation selon le questionnaire. Pourriez-vous analyser mon dossier personnellement ?"
+                    size="small"
+                  >
+                    📧 Demander une analyse personnalisée
+                  </Button>
+                </Alert>
+              </>
             )}
             
             <Button 
