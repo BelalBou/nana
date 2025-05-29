@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, FormControlLabel, Switch, RadioGroup, Radio, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { useRegions, type Region } from '../../hooks/useRegions';
 
 interface Condition {
   id: number;
@@ -17,6 +18,7 @@ interface QuestionFormProps {
 }
 
 const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
+  const { regions, loading: regionsLoading } = useRegions();
   const getInitialValue = (type: string) => {
     switch (type) {
       case 'boolean':
@@ -38,6 +40,14 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
   useEffect(() => {
     setValue(getInitialValue(condition.type));
   }, [condition.id, condition.type]);
+
+  // Log pour debug
+  useEffect(() => {
+    if (condition.field === 'region') {
+      console.log('Question région - Régions disponibles:', regions);
+      console.log('Loading régions:', regionsLoading);
+    }
+  }, [regions, regionsLoading, condition.field]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,11 +72,20 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
                 onChange={(e) => setValue(e.target.value)}
                 label="Région"
                 required
+                disabled={regionsLoading}
               >
-                <MenuItem value="france">France</MenuItem>
-                <MenuItem value="belgique_flandre">Belgique (Flandre)</MenuItem>
-                <MenuItem value="belgique_wallonie">Belgique (Wallonie)</MenuItem>
-                <MenuItem value="belgique_bruxelles">Belgique (Bruxelles-Capitale)</MenuItem>
+                {regions.length === 0 && !regionsLoading ? (
+                  <MenuItem disabled>Aucune région disponible</MenuItem>
+                ) : (
+                  regions.map((region: Region) => {
+                    console.log('Rendu région dans question:', region);
+                    return (
+                      <MenuItem key={region.id} value={region.name}>
+                        {region.name}
+                      </MenuItem>
+                    );
+                  })
+                )}
               </Select>
             </FormControl>
           );
@@ -177,4 +196,4 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ condition, onAnswer }) => {
   );
 };
 
-export default QuestionForm; 
+export default QuestionForm;

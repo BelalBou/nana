@@ -21,13 +21,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const response = await axios.post<{ access_token: string }>('http://localhost:4000/auth/login', {
+      const response = await axios.post<{ access_token: string }>(`${API_BASE_URL}/auth/login`, {
         email,
         password,
       });
@@ -104,4 +106,4 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   );
 };
 
-export default LoginForm; 
+export default LoginForm;

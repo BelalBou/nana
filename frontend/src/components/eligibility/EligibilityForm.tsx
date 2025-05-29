@@ -38,9 +38,11 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+
   const fetchAids = async () => {
     try {
-      const response = await axios.get<Aid[]>('http://localhost:4000/aids');
+      const response = await axios.get<Aid[]>(`${API_BASE_URL}/aids`);
       console.log('Réponse API:', response.data);
       setAids(response.data);
       setLoading(false);
@@ -67,7 +69,7 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
     try {
       console.log('Début de la vérification avec les réponses:', answers);
       setIsChecking(true);
-      const response = await axios.post<Aid[]>('http://localhost:4000/eligibility/check', { answers });
+      const response = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/check`, { answers });
       console.log('Résultats éligibilité:', response.data);
       setEligibleAids(response.data);
       onEligibilityResult(response.data);
@@ -236,4 +238,4 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
   );
 };
 
-export default EligibilityForm; 
+export default EligibilityForm;

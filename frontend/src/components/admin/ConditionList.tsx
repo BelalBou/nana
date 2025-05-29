@@ -57,16 +57,18 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
     aidId: aidId
   });
 
-  const fetchConditions = async () => {
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+
+  const fetchConditions = useCallback(async () => {
     try {
-      const response = await axios.get<Condition[]>(`http://localhost:4000/conditions?aidId=${aidId}`);
+      const response = await axios.get<Condition[]>(`${API_BASE_URL}/conditions?aidId=${aidId}`);
       setConditions(response.data);
       setLoading(false);
     } catch (err) {
       setError('Erreur lors du chargement des conditions');
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL, aidId]);
 
   useEffect(() => {
     fetchConditions();
@@ -87,7 +89,7 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
     if (!conditionToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:4000/conditions/${conditionToDelete}`);
+      await axios.delete(`${API_BASE_URL}/conditions/${conditionToDelete}`);
       setConditions(conditions.filter(condition => condition.id !== conditionToDelete));
       setOpenDeleteDialog(false);
       setConditionToDelete(null);
@@ -99,12 +101,12 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
   const handleFormSubmit = async () => {
     try {
       if (selectedCondition) {
-        await axios.patch(`http://localhost:4000/conditions/${selectedCondition.id}`, formData);
+        await axios.patch(`${API_BASE_URL}/conditions/${selectedCondition.id}`, formData);
         setConditions(conditions.map(c => 
           c.id === selectedCondition.id ? { ...c, ...formData } : c
         ));
       } else {
-        const response = await axios.post<Condition>('http://localhost:4000/conditions', formData);
+        const response = await axios.post<Condition>(`${API_BASE_URL}/conditions`, formData);
         setConditions([...conditions, response.data]);
       }
       setOpenForm(false);
@@ -279,4 +281,4 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
   );
 };
 
-export default ConditionList; 
+export default ConditionList;

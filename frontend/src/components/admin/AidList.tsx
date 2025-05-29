@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -47,20 +47,22 @@ const AidList: React.FC = () => {
   const [aidToDelete, setAidToDelete] = useState<number | null>(null);
   const [selectedAidForConditions, setSelectedAidForConditions] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchAids();
-  }, []);
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
-  const fetchAids = async () => {
+  const fetchAids = useCallback(async () => {
     try {
-      const response = await axios.get<Aid[]>('http://localhost:4000/aids');
+      const response = await axios.get<Aid[]>(`${API_BASE_URL}/aids`);
       setAids(response.data);
       setLoading(false);
     } catch (err) {
       setError('Erreur lors du chargement des aides');
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchAids();
+  }, [fetchAids]);
 
   const handleEdit = (aid: Aid) => {
     setSelectedAid(aid);
@@ -76,7 +78,7 @@ const AidList: React.FC = () => {
     if (!aidToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:4000/aids/${aidToDelete}`);
+      await axios.delete(`${API_BASE_URL}/aids/${aidToDelete}`);
       setAids(aids.filter(aid => aid.id !== aidToDelete));
       setOpenDeleteDialog(false);
       setAidToDelete(null);
@@ -87,7 +89,7 @@ const AidList: React.FC = () => {
 
   const handleToggleActive = async (aid: Aid) => {
     try {
-      await axios.patch(`http://localhost:4000/aids/${aid.id}`, {
+      await axios.patch(`${API_BASE_URL}/aids/${aid.id}`, {
         active: !aid.active
       });
       setAids(aids.map(a => 
@@ -101,12 +103,12 @@ const AidList: React.FC = () => {
   const handleFormSubmit = async (aidData: Partial<Aid>) => {
     try {
       if (selectedAid) {
-        await axios.patch(`http://localhost:4000/aids/${selectedAid.id}`, aidData);
+        await axios.patch(`${API_BASE_URL}/aids/${selectedAid.id}`, aidData);
         setAids(aids.map(a => 
           a.id === selectedAid.id ? { ...a, ...aidData } : a
         ));
       } else {
-        const response = await axios.post<Aid>('http://localhost:4000/aids', aidData);
+        const response = await axios.post<Aid>(`${API_BASE_URL}/aids`, aidData);
         setAids([...aids, response.data]);
       }
       setOpenForm(false);
@@ -252,4 +254,4 @@ const AidList: React.FC = () => {
   );
 };
 
-export default AidList; 
+export default AidList;

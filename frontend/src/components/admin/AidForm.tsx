@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
+import { useRegions, type Region } from '../../hooks/useRegions';
 
 interface Aid {
   id: number;
@@ -27,6 +28,7 @@ interface AidFormProps {
 }
 
 const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
+  const { regions, loading: regionsLoading } = useRegions();
   const [formData, setFormData] = useState<Partial<Aid>>({
     title: '',
     description: '',
@@ -40,6 +42,12 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
       setFormData(aid);
     }
   }, [aid]);
+
+  // Log pour debug
+  useEffect(() => {
+    console.log('Régions dans AidForm:', regions);
+    console.log('Loading régions:', regionsLoading);
+  }, [regions, regionsLoading]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked } = e.target;
@@ -101,15 +109,24 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
             <InputLabel>Région</InputLabel>
             <Select
               name="region"
-              value={formData.region}
+              value={formData.region || ''}
               onChange={handleSelectChange}
               label="Région"
               required
+              disabled={regionsLoading}
             >
-              <MenuItem value="france">France</MenuItem>
-              <MenuItem value="belgique_flandre">Belgique (Flandre)</MenuItem>
-              <MenuItem value="belgique_wallonie">Belgique (Wallonie)</MenuItem>
-              <MenuItem value="belgique_bruxelles">Belgique (Bruxelles-Capitale)</MenuItem>
+              {regions.length === 0 && !regionsLoading ? (
+                <MenuItem disabled>Aucune région disponible</MenuItem>
+              ) : (
+                regions.map((region: Region) => {
+                  console.log('Rendu région:', region);
+                  return (
+                    <MenuItem key={region.id} value={region.name}>
+                      {region.name}
+                    </MenuItem>
+                  );
+                })
+              )}
             </Select>
           </FormControl>
           <TextField
@@ -146,4 +163,4 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
   );
 };
 
-export default AidForm; 
+export default AidForm;

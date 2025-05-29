@@ -39,6 +39,11 @@ interface NextQuestionResponse {
   remainingAids?: number;
 }
 
+interface Region {
+  id: number;
+  name: string;
+}
+
 const SmartEligibilityForm: React.FC = () => {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentStep, setCurrentStep] = useState<QuestionStep | null>(null);
@@ -47,6 +52,7 @@ const SmartEligibilityForm: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [availableRegions, setAvailableRegions] = useState<Region[]>([]);
 
   const fetchNextQuestion = async () => {
     try {
@@ -125,6 +131,11 @@ const SmartEligibilityForm: React.FC = () => {
     axios.get<Question[]>('http://localhost:4000/questions')
       .then(response => setTotalQuestions(response.data.length))
       .catch(console.error);
+
+    // Fetch available regions from database
+    axios.get<Region[]>('http://localhost:4000/regions')
+      .then(response => setAvailableRegions(response.data))
+      .catch(console.error);
   }, []);
 
   const renderQuestionInput = () => {
@@ -155,7 +166,14 @@ const SmartEligibilityForm: React.FC = () => {
         );
 
       case 'select':
-        const options = question.options ? JSON.parse(question.options) : [];
+        // Utiliser les régions de la DB si c'est une question sur la région
+        let options;
+        if (question.field === 'region' && availableRegions.length > 0) {
+          options = availableRegions.map(region => region.name);
+        } else {
+          options = question.options ? JSON.parse(question.options) : [];
+        }
+        
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>
             {options.map((option: string) => (
