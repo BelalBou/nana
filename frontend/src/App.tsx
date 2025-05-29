@@ -1,16 +1,59 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Container, CssBaseline } from '@mui/material';
-import EligibilityForm from './components/eligibility/EligibilityForm';
+import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import SmartEligibilityForm from './components/eligibility/SmartEligibilityForm';
 import AidList from './components/admin/AidList';
 import LoginForm from './components/admin/LoginForm';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 
+// Thème personnalisé pour Immo Aide
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
+    },
+    secondary: {
+      main: '#9c27b0',
+    },
+    background: {
+      default: '#f8f9fa',
+    },
+  },
+  typography: {
+    h4: {
+      fontWeight: 600,
+    },
+    h5: {
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 500,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
+    },
+  },
+});
+
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" />;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const AppContent = () => {
@@ -20,16 +63,17 @@ const AppContent = () => {
     <Box sx={{ 
       display: 'flex', 
       flexDirection: 'column',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      backgroundColor: 'background.default'
     }}>
       <Header />
-      <Container maxWidth="lg" sx={{ flex: 1, py: 4 }}>
+      <Box sx={{ flex: 1 }}>
         <Routes>
-          {/* Route publique - Formulaire d'éligibilité */}
-          <Route path="/" element={<EligibilityForm onEligibilityResult={() => {}} />} />
+          {/* Route publique - Questionnaire intelligent */}
+          <Route path="/" element={<SmartEligibilityForm />} />
           
           {/* Routes admin */}
-          <Route path="/admin/login" element={<LoginForm onLoginSuccess={login} />} />
+          <Route path="/login" element={<LoginForm onLoginSuccess={login} />} />
           <Route 
             path="/admin" 
             element={
@@ -39,7 +83,7 @@ const AppContent = () => {
             } 
           />
         </Routes>
-      </Container>
+      </Box>
       <Footer />
     </Box>
   );
@@ -47,12 +91,14 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <Router>
-      <CssBaseline />
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <CssBaseline />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </Router>
+    </ThemeProvider>
   );
 };
 

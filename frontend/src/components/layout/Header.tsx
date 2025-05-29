@@ -1,62 +1,66 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Box, Button, Container } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import HomeIcon from '@mui/icons-material/Home';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
-  return (
-    <AppBar position="static" color="primary" elevation={0}>
-      <Container maxWidth="lg">
-        <Toolbar disableGutters>
-          <Typography
-            variant="h6"
-            component={RouterLink}
-            to="/"
-            sx={{
-              flexGrow: 1,
-              textDecoration: 'none',
-              color: 'inherit',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}
-          >
-            <HomeIcon />
-            Aides Immobilières
-          </Typography>
+  const { user, logout } = useAuth();
+  const location = useLocation();
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              component={RouterLink}
-              to="/"
-              color="inherit"
-              sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                }
-              }}
+  return (
+    <AppBar position="static" elevation={0} sx={{ backgroundColor: '#1976d2' }}>
+      <Toolbar>
+        <Typography 
+          variant="h5" 
+          component={Link} 
+          to="/" 
+          sx={{ 
+            flexGrow: 1, 
+            textDecoration: 'none', 
+            color: 'inherit',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
+        >
+          🏠 Immo Aide
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {user ? (
+            <>
+              <Button 
+                color="inherit" 
+                component={Link} 
+                to="/admin"
+                variant={location.pathname === '/admin' ? 'outlined' : 'text'}
+                sx={{ color: 'white' }}
+              >
+                Admin
+              </Button>
+              <Button 
+                color="inherit" 
+                onClick={logout}
+                sx={{ color: 'white' }}
+              >
+                Déconnexion
+              </Button>
+            </>
+          ) : (
+            <Button 
+              color="inherit" 
+              component={Link} 
+              to="/login"
+              sx={{ color: 'white' }}
             >
-              Accueil
+              Connexion Admin
             </Button>
-            <Button
-              component={RouterLink}
-              to="/admin"
-              color="inherit"
-              startIcon={<AdminPanelSettingsIcon />}
-              sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              Administration
-            </Button>
-          </Box>
-        </Toolbar>
-      </Container>
+          )}
+        </Box>
+      </Toolbar>
     </AppBar>
   );
 };
 
-export default Header; 
+export default Header;

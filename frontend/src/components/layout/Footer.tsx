@@ -82,11 +82,14 @@ const Footer: React.FC = () => {
         <Divider sx={{ my: 3 }} />
 
         <Typography variant="body2" color="text.secondary" align="center">
-          © {new Date().getFullYear()} Aides Immobilières. Tous droits réservés.
+          © {new Date().getFullYear()} Immo Aide - Votre assistant pour les aides immobilières
+        </Typography>
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
+          Trouvez facilement les aides disponibles en France, Flandre, Wallonie et Bruxelles
         </Typography>
       </Container>
     </Box>
   );
 };
 
-export default Footer; 
+export default Footer;

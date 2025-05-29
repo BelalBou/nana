@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+interface User {
+  id: number;
+  email: string;
+}
+
 interface AuthContextType {
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   login: (token: string) => void;
@@ -14,15 +20,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem('adminToken');
   });
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (token) {
       localStorage.setItem('adminToken', token);
       // Configuration d'axios pour inclure le token dans toutes les requêtes
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Définir un utilisateur fictif pour l'instant (peut être récupéré via API plus tard)
+      setUser({ id: 1, email: 'nana' });
     } else {
       localStorage.removeItem('adminToken');
       delete axios.defaults.headers.common['Authorization'];
+      setUser(null);
     }
   }, [token]);
 
@@ -36,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{
+      user,
       token,
       isAuthenticated: !!token,
       login,
@@ -52,4 +63,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
