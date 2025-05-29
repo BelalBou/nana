@@ -20,8 +20,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Chip,
+  Stack,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Question {
@@ -49,6 +51,10 @@ const QuestionList: React.FC = () => {
     order: 0
   });
 
+  // Nouvel état pour gérer les options de manière plus conviviale
+  const [optionsList, setOptionsList] = useState<string[]>([]);
+  const [newOption, setNewOption] = useState('');
+
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
   const fetchQuestions = useCallback(async () => {
@@ -69,6 +75,19 @@ const QuestionList: React.FC = () => {
   const handleEdit = (question: Question) => {
     setSelectedQuestion(question);
     setFormData(question);
+    
+    // Charger les options existantes
+    if (question.options && question.type === 'select') {
+      try {
+        const parsedOptions = JSON.parse(question.options);
+        setOptionsList(Array.isArray(parsedOptions) ? parsedOptions : []);
+      } catch (e) {
+        setOptionsList([]);
+      }
+    } else {
+      setOptionsList([]);
+    }
+    
     setOpenForm(true);
   };
 
@@ -90,17 +109,36 @@ const QuestionList: React.FC = () => {
     }
   };
 
+  const handleAddOption = () => {
+    if (newOption.trim() && !optionsList.includes(newOption.trim())) {
+      setOptionsList([...optionsList, newOption.trim()]);
+      setNewOption('');
+    }
+  };
+
+  const handleRemoveOption = (optionToRemove: string) => {
+    setOptionsList(optionsList.filter(option => option !== optionToRemove));
+  };
+
   const handleFormSubmit = async () => {
     try {
+      // Préparer les données avec les options au bon format
+      const submissionData = {
+        ...formData,
+        options: formData.type === 'select' ? JSON.stringify(optionsList) : ''
+      };
+
       if (selectedQuestion) {
-        await axios.patch(`${API_BASE_URL}/questions/${selectedQuestion.id}`, formData);
+        await axios.patch(`${API_BASE_URL}/questions/${selectedQuestion.id}`, submissionData);
         setQuestions(questions.map(q => 
-          q.id === selectedQuestion.id ? { ...q, ...formData } : q
+          q.id === selectedQuestion.id ? { ...q, ...submissionData } : q
         ));
       } else {
-        const response = await axios.post<Question>(`${API_BASE_URL}/questions`, formData);
+        const response = await axios.post<Question>(`${API_BASE_URL}/questions`, submissionData);
         setQuestions([...questions, response.data]);
       }
+      
+      // Réinitialiser le formulaire
       setOpenForm(false);
       setSelectedQuestion(null);
       setFormData({
@@ -110,8 +148,19 @@ const QuestionList: React.FC = () => {
         options: '',
         order: 0
       });
+      setOptionsList([]);
+      setNewOption('');
     } catch (err) {
       setError('Erreur lors de la sauvegarde de la question');
+    }
+  };
+
+  const handleTypeChange = (newType: string) => {
+    setFormData({ ...formData, type: newType });
+    // Réinitialiser les options si le type n'est plus "select"
+    if (newType !== 'select') {
+      setOptionsList([]);
+      setNewOption('');
     }
   };
 
@@ -139,6 +188,8 @@ const QuestionList: React.FC = () => {
               options: '',
               order: questions.length
             });
+            setOptionsList([]);
+            setNewOption('');
             setOpenForm(true);
           }}
         >
@@ -164,7 +215,22 @@ const QuestionList: React.FC = () => {
                 <TableCell>{question.text}</TableCell>
                 <TableCell>{question.field}</TableCell>
                 <TableCell>{question.type}</TableCell>
-                <TableCell>{question.options || '-'}</TableCell>
+                <TableCell>
+                  {question.type === 'select' && question.options ? (
+                    <Box>
+                      {JSON.parse(question.options).map((option: string, index: number) => (
+                        <Chip
+                          key={index}
+                          label={option}
+                          size="small"
+                          sx={{ mr: 0.5, mb: 0.5 }}
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>{question.order}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(question)}>
@@ -199,29 +265,78 @@ const QuestionList: React.FC = () => {
               value={formData.field}
               onChange={(e) => setFormData({ ...formData, field: e.target.value })}
               required
+              helperText="Ex: age, region, student (sans espaces, en minuscules)"
             />
             <FormControl fullWidth>
               <InputLabel>Type</InputLabel>
               <Select
                 value={formData.type}
                 label="Type"
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                onChange={(e) => handleTypeChange(e.target.value)}
               >
                 <MenuItem value="text">Texte</MenuItem>
                 <MenuItem value="number">Nombre</MenuItem>
                 <MenuItem value="boolean">Oui/Non</MenuItem>
-                <MenuItem value="select">Sélection</MenuItem>
+                <MenuItem value="select">Sélection (choix multiples)</MenuItem>
               </Select>
             </FormControl>
-            <TextField
-              fullWidth
-              label="Options (JSON pour les sélections)"
-              value={formData.options}
-              onChange={(e) => setFormData({ ...formData, options: e.target.value })}
-              multiline
-              rows={3}
-              helperText='Exemple pour select: ["Option 1", "Option 2"]'
-            />
+
+            {formData.type === 'select' && (
+              <Box sx={{ border: 1, borderColor: 'grey.300', borderRadius: 1, p: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Options de sélection
+                </Typography>
+                
+                {/* Afficher les options existantes */}
+                {optionsList.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {optionsList.map((option, index) => (
+                        <Chip
+                          key={index}
+                          label={option}
+                          onDelete={() => handleRemoveOption(option)}
+                          deleteIcon={<CloseIcon />}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {/* Ajouter une nouvelle option */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Nouvelle option"
+                    value={newOption}
+                    onChange={(e) => setNewOption(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddOption();
+                      }
+                    }}
+                    placeholder="Ex: Ile-de-France, Provence-Alpes-Côte d'Azur..."
+                  />
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleAddOption}
+                    disabled={!newOption.trim() || optionsList.includes(newOption.trim())}
+                  >
+                    Ajouter
+                  </Button>
+                </Box>
+                
+                {optionsList.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Ajoutez au moins une option pour ce type de question
+                  </Typography>
+                )}
+              </Box>
+            )}
+
             <TextField
               fullWidth
               type="number"
@@ -229,12 +344,21 @@ const QuestionList: React.FC = () => {
               value={formData.order}
               onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
               required
+              helperText="L'ordre d'apparition de la question (0 = première)"
             />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenForm(false)}>Annuler</Button>
-          <Button onClick={handleFormSubmit} variant="contained">
+          <Button 
+            onClick={handleFormSubmit} 
+            variant="contained"
+            disabled={
+              !formData.text || 
+              !formData.field || 
+              (formData.type === 'select' && optionsList.length === 0)
+            }
+          >
             {selectedQuestion ? 'Modifier' : 'Créer'}
           </Button>
         </DialogActions>
