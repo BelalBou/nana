@@ -26,13 +26,17 @@ import axios from 'axios';
 
 interface Condition {
   id: number;
-  question: string;
-  field: string;
-  type: string;
+  questionId: number;
   operator: string;
   value: string;
-  order: number;
   aidId: number;
+  question?: {
+    id: number;
+    text: string;
+    field: string;
+    type: string;
+    options?: string;
+  };
 }
 
 interface ConditionListProps {
@@ -47,28 +51,59 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [conditionToDelete, setConditionToDelete] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Partial<Condition>>({
-    question: '',
-    field: '',
-    type: 'text',
+  const [formData, setFormData] = useState<{
+    questionId: number | '';
+    operator: string;
+    value: string;
+    aidId: number;
+  }>({
+    questionId: '',
     operator: 'equals',
     value: '',
-    order: 0,
     aidId: aidId
   });
+
+  // Ajouter un état pour les questions disponibles
+  const [availableQuestions, setAvailableQuestions] = useState<Array<{
+    id: number;
+    text: string;
+    field: string;
+    type: string;
+  }>>([]);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
   const fetchConditions = useCallback(async () => {
     try {
+      // Supprimer le paramètre include car le backend l'inclut déjà automatiquement
       const response = await axios.get<Condition[]>(`${API_BASE_URL}/conditions?aidId=${aidId}`);
+      console.log('Conditions récupérées:', response.data);
       setConditions(response.data);
       setLoading(false);
     } catch (err) {
+      console.error('Erreur lors du chargement des conditions:', err);
       setError('Erreur lors du chargement des conditions');
       setLoading(false);
     }
   }, [API_BASE_URL, aidId]);
+
+  // Récupérer les questions disponibles
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get<Array<{
+          id: number;
+          text: string;
+          field: string;
+          type: string;
+        }>>(`${API_BASE_URL}/questions`);
+        setAvailableQuestions(response.data);
+      } catch (err) {
+        console.error('Erreur lors du chargement des questions:', err);
+      }
+    };
+    fetchQuestions();
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     fetchConditions();
@@ -76,7 +111,12 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
 
   const handleEdit = (condition: Condition) => {
     setSelectedCondition(condition);
-    setFormData(condition);
+    setFormData({
+      questionId: condition.questionId,
+      operator: condition.operator || 'equals',
+      value: String(condition.value || ''),
+      aidId: condition.aidId
+    });
     setOpenForm(true);
   };
 
@@ -101,26 +141,26 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
   const handleFormSubmit = async () => {
     try {
       if (selectedCondition) {
-        await axios.patch(`${API_BASE_URL}/conditions/${selectedCondition.id}`, formData);
-        setConditions(conditions.map(c => 
-          c.id === selectedCondition.id ? { ...c, ...formData } : c
-        ));
+        const response = await axios.patch(`${API_BASE_URL}/conditions/${selectedCondition.id}`, formData);
+        console.log('Condition mise à jour:', response.data);
+        // Recharger les conditions pour avoir les dernières données
+        fetchConditions();
       } else {
         const response = await axios.post<Condition>(`${API_BASE_URL}/conditions`, formData);
-        setConditions([...conditions, response.data]);
+        console.log('Condition créée:', response.data);
+        // Recharger les conditions pour avoir les dernières données
+        fetchConditions();
       }
       setOpenForm(false);
       setSelectedCondition(null);
       setFormData({
-        question: '',
-        field: '',
-        type: 'text',
+        questionId: '',
         operator: 'equals',
         value: '',
-        order: 0,
         aidId: aidId
       });
     } catch (err) {
+      console.error('Erreur lors de la sauvegarde de la condition:', err);
       setError('Erreur lors de la sauvegarde de la condition');
     }
   };
@@ -143,12 +183,9 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
           onClick={() => {
             setSelectedCondition(null);
             setFormData({
-              question: '',
-              field: '',
-              type: 'text',
+              questionId: '',
               operator: 'equals',
               value: '',
-              order: conditions.length,
               aidId: aidId
             });
             setOpenForm(true);
@@ -167,19 +204,27 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
               <TableCell>Type</TableCell>
               <TableCell>Opérateur</TableCell>
               <TableCell>Valeur</TableCell>
-              <TableCell>Ordre</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {conditions.map((condition) => (
               <TableRow key={condition.id}>
-                <TableCell>{condition.question}</TableCell>
-                <TableCell>{condition.field}</TableCell>
-                <TableCell>{condition.type}</TableCell>
-                <TableCell>{condition.operator}</TableCell>
-                <TableCell>{condition.value}</TableCell>
-                <TableCell>{condition.order}</TableCell>
+                <TableCell>
+                  {condition.question?.text || 'Question non trouvée'}
+                </TableCell>
+                <TableCell>{condition.question?.field || 'Non défini'}</TableCell>
+                <TableCell>{condition.question?.type || 'Non défini'}</TableCell>
+                <TableCell>
+                  {condition.operator === 'equals' && 'Égal à'}
+                  {condition.operator === 'notEquals' && 'Différent de'}
+                  {condition.operator === 'greaterThan' && 'Supérieur à'}
+                  {condition.operator === 'lessThan' && 'Inférieur à'}
+                  {condition.operator === 'between' && 'Entre'}
+                  {condition.operator === 'contains' && 'Contient'}
+                  {!['equals', 'notEquals', 'greaterThan', 'lessThan', 'between', 'contains'].includes(condition.operator) && condition.operator}
+                </TableCell>
+                <TableCell>{String(condition.value)}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(condition)}>
                     <EditIcon />
@@ -200,30 +245,19 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'grid', gap: 2, mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Question"
-              value={formData.question}
-              onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Champ"
-              value={formData.field}
-              onChange={(e) => setFormData({ ...formData, field: e.target.value })}
-              required
-            />
             <FormControl fullWidth>
-              <InputLabel>Type</InputLabel>
+              <InputLabel>Question</InputLabel>
               <Select
-                value={formData.type}
-                label="Type"
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                value={formData.questionId}
+                label="Question"
+                onChange={(e) => setFormData({ ...formData, questionId: Number(e.target.value) })}
+                required
               >
-                <MenuItem value="text">Texte</MenuItem>
-                <MenuItem value="number">Nombre</MenuItem>
-                <MenuItem value="boolean">Oui/Non</MenuItem>
+                {availableQuestions.map((question) => (
+                  <MenuItem key={question.id} value={question.id}>
+                    {question.text} ({question.field})
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <FormControl fullWidth>
@@ -237,6 +271,7 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
                 <MenuItem value="notEquals">Différent de</MenuItem>
                 <MenuItem value="greaterThan">Supérieur à</MenuItem>
                 <MenuItem value="lessThan">Inférieur à</MenuItem>
+                <MenuItem value="between">Entre</MenuItem>
                 <MenuItem value="contains">Contient</MenuItem>
               </Select>
             </FormControl>
@@ -246,14 +281,7 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
               value={formData.value}
               onChange={(e) => setFormData({ ...formData, value: e.target.value })}
               required
-            />
-            <TextField
-              fullWidth
-              type="number"
-              label="Ordre"
-              value={formData.order}
-              onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-              required
+              helperText="Pour 'entre', utilisez le format: valeur1,valeur2"
             />
           </Box>
         </DialogContent>

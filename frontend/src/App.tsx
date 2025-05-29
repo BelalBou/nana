@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import SmartEligibilityForm from './components/eligibility/SmartEligibilityForm';
-import AidList from './components/admin/AidList';
+import AdminDashboard from './components/admin/AdminDashboard';
 import LoginForm from './components/admin/LoginForm';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './components/layout/Header';
@@ -78,7 +78,7 @@ const AppContent = () => {
             path="/admin" 
             element={
               <AdminRoute>
-                <AidList />
+                <AdminDashboard />
               </AdminRoute>
             } 
           />

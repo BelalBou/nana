@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -17,14 +16,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  AppBar,
-  Toolbar,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Settings as SettingsIcon, Logout as LogoutIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import axios from 'axios';
 import AidForm from './AidForm';
 import ConditionList from './ConditionList';
-import { useAuth } from '../../contexts/AuthContext';
 
 interface Aid {
   id: number;
@@ -36,8 +32,6 @@ interface Aid {
 }
 
 const AidList: React.FC = () => {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
   const [aids, setAids] = useState<Aid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,11 +112,6 @@ const AidList: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
-
   if (loading) {
     return <Typography>Chargement...</Typography>;
   }
@@ -133,21 +122,6 @@ const AidList: React.FC = () => {
 
   return (
     <Box>
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Administration
-          </Typography>
-          <Button
-            color="inherit"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-          >
-            Déconnexion
-          </Button>
-        </Toolbar>
-      </AppBar>
-
       <Box sx={{ p: 3 }}>
         {selectedAidForConditions ? (
           <>

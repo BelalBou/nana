@@ -12,7 +12,6 @@ import {
   Container
 } from '@mui/material';
 import axios from 'axios';
-import { env } from 'process';
 
 interface Question {
   id: number;
@@ -53,7 +52,6 @@ const SmartEligibilityForm: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [availableRegions, setAvailableRegions] = useState<Region[]>([]);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
@@ -167,13 +165,8 @@ const SmartEligibilityForm: React.FC = () => {
         );
 
       case 'select':
-        // Utiliser les régions de la DB si c'est une question sur la région
-        let options;
-        if (question.field === 'region' && availableRegions.length > 0) {
-          options = availableRegions.map(region => region.name);
-        } else {
-          options = question.options ? JSON.parse(question.options) : [];
-        }
+        // Utiliser les options de la question directement
+        const options = question.options ? JSON.parse(question.options) : [];
         
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>

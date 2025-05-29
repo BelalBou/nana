@@ -9,6 +9,7 @@ import {
   Alert,
 } from '@mui/material';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormProps {
   onLoginSuccess: (token: string) => void;
@@ -16,6 +17,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         password,
       });
       
+      // Utiliser la méthode login du contexte
+      login(response.data.access_token);
       onLoginSuccess(response.data.access_token);
       navigate('/admin');
     } catch (err) {
