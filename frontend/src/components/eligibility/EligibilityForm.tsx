@@ -60,6 +60,17 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
     }));
   };
 
+  const handleNextStep = (value: any) => {
+    handleAnswer(questions[currentStep].field, value);
+    setCurrentStep(prev => prev + 1);
+  };
+
+  const handlePreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
   const checkEligibility = async () => {
     if (isChecking || hasChecked) {
       console.log('Une vérification est déjà en cours ou a déjà été effectuée');
@@ -219,10 +230,12 @@ const EligibilityForm: React.FC<EligibilityFormProps> = ({ onEligibilityResult }
       {currentStep < questions.length ? (
         <QuestionForm
           condition={questions[currentStep]}
-          onAnswer={(value) => {
-            handleAnswer(questions[currentStep].field, value);
-            setCurrentStep(prev => prev + 1);
-          }}
+          currentStep={currentStep}
+          totalSteps={questions.length}
+          onAnswer={handleNextStep}
+          onPrevious={handlePreviousStep}
+          canGoPrevious={currentStep > 0}
+          currentValue={answers[questions[currentStep]?.field]}
         />
       ) : isChecking ? (
         <Box sx={{ mt: 3 }}>

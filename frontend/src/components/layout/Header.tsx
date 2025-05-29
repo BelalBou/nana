@@ -1,19 +1,31 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleHomeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Forcer la navigation vers la page d'accueil et recharger le composant
+    navigate('/', { replace: true });
+    // Petit délai pour s'assurer que la navigation est complète
+    setTimeout(() => {
+      window.location.reload();
+    }, 50);
+  };
 
   return (
     <AppBar position="static" elevation={0} sx={{ backgroundColor: '#1976d2' }}>
       <Toolbar>
         <Typography 
           variant="h5" 
-          component={Link} 
-          to="/" 
+          component="a"
+          href="/"
+          onClick={handleHomeClick}
           sx={{ 
             flexGrow: 1, 
             textDecoration: 'none', 
@@ -21,7 +33,8 @@ const Header: React.FC = () => {
             fontWeight: 'bold',
             display: 'flex',
             alignItems: 'center',
-            gap: 1
+            gap: 1,
+            cursor: 'pointer'
           }}
         >
           🏠 Immo Aide

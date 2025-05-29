@@ -9,8 +9,10 @@ import {
   LinearProgress,
   Chip,
   Alert,
-  Container
+  Container,
+  Stack
 } from '@mui/material';
+import { ArrowBack, ArrowForward } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Question {
@@ -52,6 +54,11 @@ const SmartEligibilityForm: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  
+  // Nouvel état pour gérer l'historique des questions
+  const [questionHistory, setQuestionHistory] = useState<QuestionStep[]>([]);
+  const [answerHistory, setAnswerHistory] = useState<Record<string, any>[]>([]);
+  const [pendingAnswer, setPendingAnswer] = useState<any>(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
@@ -84,14 +91,23 @@ const SmartEligibilityForm: React.FC = () => {
   };
 
   const handleAnswer = async (value: any) => {
+    setPendingAnswer(value);
+  };
+
+  const handleNext = async () => {
+    if (pendingAnswer === null) return;
+
     const newAnswers = {
       ...answers,
-      [currentStep!.question.field]: value
+      [currentStep!.question.field]: pendingAnswer
     };
+    
+    // Sauvegarder l'état actuel dans l'historique
+    setQuestionHistory(prev => [...prev, currentStep!]);
+    setAnswerHistory(prev => [...prev, answers]);
     
     setAnswers(newAnswers);
     
-    // Appeler fetchNextQuestion sans incrementer currentQuestionIndex ici
     try {
       setLoading(true);
       const response = await axios.post<NextQuestionResponse>(`${API_BASE_URL}/eligibility/next-question`, { 
@@ -104,8 +120,8 @@ const SmartEligibilityForm: React.FC = () => {
           remainingAids: response.data.remainingAids || 0
         });
         setCurrentQuestionIndex(prev => prev + 1);
+        setPendingAnswer(null);
       } else {
-        // Plus de questions, récupérer les résultats finaux
         const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
           answers: newAnswers 
         });
@@ -119,11 +135,33 @@ const SmartEligibilityForm: React.FC = () => {
     }
   };
 
+  const handlePrevious = () => {
+    if (questionHistory.length === 0) return;
+
+    // Récupérer l'état précédent
+    const previousQuestion = questionHistory[questionHistory.length - 1];
+    const previousAnswers = answerHistory[answerHistory.length - 1];
+
+    setCurrentStep(previousQuestion);
+    setAnswers(previousAnswers);
+    setCurrentQuestionIndex(prev => prev - 1);
+    
+    // Mettre la réponse précédente comme pendingAnswer
+    setPendingAnswer(answers[currentStep!.question.field] || null);
+
+    // Supprimer le dernier élément de l'historique
+    setQuestionHistory(prev => prev.slice(0, -1));
+    setAnswerHistory(prev => prev.slice(0, -1));
+  };
+
   const startQuestionnaire = () => {
     setAnswers({});
     setCurrentQuestionIndex(0);
     setIsComplete(false);
     setFinalResults([]);
+    setQuestionHistory([]);
+    setAnswerHistory([]);
+    setPendingAnswer(null);
     fetchNextQuestion();
   };
 
@@ -147,16 +185,16 @@ const SmartEligibilityForm: React.FC = () => {
         return (
           <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
             <Button
-              variant="contained"
+              variant={pendingAnswer === true ? "contained" : "outlined"}
               color="primary"
-              onClick={() => handleAnswer(true)}
+              onClick={() => setPendingAnswer(true)}
               sx={{ flex: 1 }}
             >
               Oui
             </Button>
             <Button
-              variant="outlined"
-              onClick={() => handleAnswer(false)}
+              variant={pendingAnswer === false ? "contained" : "outlined"}
+              onClick={() => setPendingAnswer(false)}
               sx={{ flex: 1 }}
             >
               Non
@@ -165,7 +203,6 @@ const SmartEligibilityForm: React.FC = () => {
         );
 
       case 'select':
-        // Utiliser les options de la question directement
         const options = question.options ? JSON.parse(question.options) : [];
         
         return (
@@ -173,12 +210,11 @@ const SmartEligibilityForm: React.FC = () => {
             {options.map((option: string) => (
               <Button
                 key={option}
-                variant="outlined"
-                onClick={() => handleAnswer(option)}
+                variant={pendingAnswer === option ? "contained" : "outlined"}
+                onClick={() => setPendingAnswer(option)}
                 sx={{ 
                   justifyContent: 'flex-start',
                   py: 1.5,
-                  '&:hover': { backgroundColor: 'primary.light', color: 'white' }
                 }}
               >
                 {option}
@@ -193,6 +229,8 @@ const SmartEligibilityForm: React.FC = () => {
             <input
               type="number"
               placeholder="Entrez votre réponse"
+              value={pendingAnswer || ''}
+              onChange={(e) => setPendingAnswer(Number(e.target.value) || null)}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -201,16 +239,6 @@ const SmartEligibilityForm: React.FC = () => {
                 borderRadius: '8px',
                 outline: 'none'
               }}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  const value = (e.target as HTMLInputElement).value;
-                  if (value) handleAnswer(Number(value));
-                }
-              }}
-              onBlur={(e) => {
-                const value = e.target.value;
-                if (value) handleAnswer(Number(value));
-              }}
             />
           </Box>
         );
@@ -218,6 +246,10 @@ const SmartEligibilityForm: React.FC = () => {
       default:
         return null;
     }
+  };
+
+  const isNextDisabled = () => {
+    return pendingAnswer === null || pendingAnswer === '';
   };
 
   if (loading) {
@@ -412,12 +444,36 @@ const SmartEligibilityForm: React.FC = () => {
           {/* Input de la question */}
           {renderQuestionInput()}
 
+          {/* Boutons de navigation */}
+          <Stack 
+            direction="row" 
+            spacing={2} 
+            sx={{ mt: 4, justifyContent: 'space-between' }}
+          >
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBack />}
+              onClick={handlePrevious}
+              disabled={questionHistory.length === 0}
+              sx={{ minWidth: 120 }}
+            >
+              Précédent
+            </Button>
+            
+            <Button
+              variant="contained"
+              endIcon={<ArrowForward />}
+              onClick={handleNext}
+              disabled={isNextDisabled()}
+              sx={{ minWidth: 120 }}
+            >
+              Suivant
+            </Button>
+          </Stack>
+
           {/* Instructions */}
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 3, textAlign: 'center' }}>
-            {currentStep.question.type === 'number' ? 
-              'Appuyez sur Entrée ou cliquez ailleurs pour valider' :
-              'Cliquez sur votre réponse'
-            }
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
+            Sélectionnez votre réponse puis cliquez sur "Suivant"
           </Typography>
         </CardContent>
       </Card>
