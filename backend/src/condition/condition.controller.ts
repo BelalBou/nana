@@ -23,12 +23,9 @@ export class ConditionController {
   @Post()
   create(@Body() createConditionDto: {
     aidId: number;
-    question: string;
-    field: string;
-    type: string;
+    questionId: number;
     operator: string;
     value: string;
-    order: number;
   }) {
     return this.conditionService.create(createConditionDto);
   }
@@ -38,12 +35,10 @@ export class ConditionController {
   update(
     @Param('id') id: string,
     @Body() updateConditionDto: {
-      question?: string;
-      field?: string;
-      type?: string;
+      aidId?: number;
+      questionId?: number;
       operator?: string;
       value?: string;
-      order?: number;
     },
   ) {
     return this.conditionService.update(+id, updateConditionDto);
@@ -54,4 +49,4 @@ export class ConditionController {
   remove(@Param('id') id: string) {
     return this.conditionService.remove(+id);
   }
-} 
+}

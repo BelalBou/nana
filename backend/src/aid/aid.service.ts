@@ -5,11 +5,27 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AidService {
   constructor(private prisma: PrismaService) {}
 
+  async create(createAidDto: {
+    title: string;
+    description: string;
+    region: string;
+    link: string;
+    active?: boolean;
+  }) {
+    return this.prisma.aid.create({
+      data: createAidDto,
+    });
+  }
+
   async findAll() {
     return this.prisma.aid.findMany({
       include: {
-        conditions: true,
-      },
+        conditions: {
+          include: {
+            question: true
+          }
+        }
+      }
     });
   }
 
@@ -17,90 +33,31 @@ export class AidService {
     return this.prisma.aid.findUnique({
       where: { id },
       include: {
-        conditions: true,
-      },
-    });
-  }
-
-  async create(data: {
-    title: string;
-    description: string;
-    region: string;
-    link: string;
-    conditions?: {
-      question: string;
-      field: string;
-      type: string;
-      operator: string;
-      value: string;
-      order: number;
-    }[];
-  }) {
-    // Normaliser la valeur de la région
-    const normalizedRegion = this.normalizeRegion(data.region);
-    
-    return this.prisma.aid.create({
-      data: {
-        ...data,
-        region: normalizedRegion,
         conditions: {
-          create: data.conditions,
-        },
-      },
-      include: {
-        conditions: true,
-      },
+          include: {
+            question: true
+          }
+        }
+      }
     });
   }
 
-  async update(id: number, data: {
+  async update(id: number, updateAidDto: {
     title?: string;
     description?: string;
     region?: string;
     link?: string;
     active?: boolean;
   }) {
-    // Normaliser la valeur de la région si elle est fournie
-    const normalizedData = {
-      ...data,
-      region: data.region ? this.normalizeRegion(data.region) : undefined,
-    };
-
-    const { conditions, ...aidData } = normalizedData as any;
     return this.prisma.aid.update({
       where: { id },
-      data: aidData,
-      include: {
-        conditions: true,
-      },
+      data: updateAidDto,
     });
   }
 
   async remove(id: number) {
-    // D'abord supprimer toutes les conditions associées
-    await this.prisma.condition.deleteMany({
-      where: { aidId: id }
-    });
-
-    // Ensuite supprimer l'aide
     return this.prisma.aid.delete({
-      where: { id }
+      where: { id },
     });
   }
-
-  private normalizeRegion(region: string): string {
-    const regionMap: { [key: string]: string } = {
-      'France': 'france',
-      'Bruxelles': 'belgique_bruxelles',
-      'Flandre': 'belgique_flandre',
-      'Wallonie': 'belgique_wallonie',
-      'Bruxelles-Capitale': 'belgique_bruxelles',
-      'france': 'france',
-      'belgique_bruxelles': 'belgique_bruxelles',
-      'belgique_flandre': 'belgique_flandre',
-      'belgique_wallonie': 'belgique_wallonie'
-    };
-
-    return regionMap[region] || region;
-  }
-} 
+}

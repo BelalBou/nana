@@ -5,9 +5,25 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ConditionService {
   constructor(private prisma: PrismaService) {}
 
+  async create(createConditionDto: {
+    aidId: number;
+    questionId: number;
+    operator: string;
+    value: string;
+  }) {
+    return this.prisma.condition.create({
+      data: createConditionDto,
+      include: {
+        question: true,
+        aid: true,
+      },
+    });
+  }
+
   async findAll() {
     return this.prisma.condition.findMany({
       include: {
+        question: true,
         aid: true,
       },
     });
@@ -17,47 +33,26 @@ export class ConditionService {
     return this.prisma.condition.findUnique({
       where: { id },
       include: {
+        question: true,
         aid: true,
       },
     });
   }
 
-  async findByAid(aidId: number) {
-    return this.prisma.condition.findMany({
-      where: { aidId },
-      orderBy: { order: 'asc' },
-    });
-  }
-
-  async create(data: {
-    aidId: number;
-    question: string;
-    field: string;
-    type: string;
-    operator: string;
-    value: string;
-    order: number;
-  }) {
-    return this.prisma.condition.create({
-      data,
-      include: {
-        aid: true,
-      },
-    });
-  }
-
-  async update(id: number, data: {
-    question?: string;
-    field?: string;
-    type?: string;
-    operator?: string;
-    value?: string;
-    order?: number;
-  }) {
+  async update(
+    id: number,
+    updateConditionDto: {
+      aidId?: number;
+      questionId?: number;
+      operator?: string;
+      value?: string;
+    },
+  ) {
     return this.prisma.condition.update({
       where: { id },
-      data,
+      data: updateConditionDto,
       include: {
+        question: true,
         aid: true,
       },
     });
@@ -68,4 +63,13 @@ export class ConditionService {
       where: { id },
     });
   }
-} 
+
+  async findByAid(aidId: number) {
+    return this.prisma.condition.findMany({
+      where: { aidId },
+      include: {
+        question: true,
+      },
+    });
+  }
+}
