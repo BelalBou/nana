@@ -51,7 +51,7 @@ const SmartEligibilityForm: React.FC = () => {
   const fetchNextQuestion = async () => {
     try {
       setLoading(true);
-      const response = await axios.post<NextQuestionResponse>('http://localhost:3001/eligibility/next-question', { 
+      const response = await axios.post<NextQuestionResponse>('http://localhost:4000/eligibility/next-question', { 
         answers 
       });
       
@@ -63,7 +63,7 @@ const SmartEligibilityForm: React.FC = () => {
         setCurrentQuestionIndex(prev => prev + 1);
       } else {
         // Plus de questions, récupérer les résultats finaux
-        const resultsResponse = await axios.post<Aid[]>('http://localhost:3001/eligibility/results', { 
+        const resultsResponse = await axios.post<Aid[]>('http://localhost:4000/eligibility/results', { 
           answers 
         });
         setFinalResults(resultsResponse.data);
@@ -96,7 +96,7 @@ const SmartEligibilityForm: React.FC = () => {
 
   useEffect(() => {
     // Fetch total questions count for progress bar
-    axios.get<Question[]>('http://localhost:3001/questions')
+    axios.get<Question[]>('http://localhost:4000/questions')
       .then(response => setTotalQuestions(response.data.length))
       .catch(console.error);
   }, []);
