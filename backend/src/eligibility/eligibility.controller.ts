@@ -11,4 +11,14 @@ export class EligibilityController {
   }) {
     return this.eligibilityService.checkEligibility(answers);
   }
-} 
+
+  @Post('next-question')
+  async getNextQuestion(@Body() body: { answers: Record<string, any> }) {
+    return this.eligibilityService.getNextQuestion(body.answers);
+  }
+
+  @Post('results')
+  async getFinalResults(@Body() body: { answers: Record<string, any> }) {
+    return this.eligibilityService.getFinalResults(body.answers);
+  }
+}

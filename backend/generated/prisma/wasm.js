@@ -126,6 +126,17 @@ exports.Prisma.AdminUserScalarFieldEnum = {
   password: 'password'
 };
 
+exports.Prisma.QuestionScalarFieldEnum = {
+  id: 'id',
+  text: 'text',
+  field: 'field',
+  type: 'type',
+  options: 'options',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.AidScalarFieldEnum = {
   id: 'id',
   title: 'title',
@@ -140,12 +151,9 @@ exports.Prisma.AidScalarFieldEnum = {
 exports.Prisma.ConditionScalarFieldEnum = {
   id: 'id',
   aidId: 'aidId',
-  question: 'question',
-  field: 'field',
-  type: 'type',
+  questionId: 'questionId',
   operator: 'operator',
   value: 'value',
-  order: 'order',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -160,9 +168,15 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
   AdminUser: 'AdminUser',
+  Question: 'Question',
   Aid: 'Aid',
   Condition: 'Condition'
 };

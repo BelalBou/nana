@@ -1,190 +1,148 @@
 import { Injectable } from '@nestjs/common';
-import { AidService } from '../aid/aid.service';
+import { PrismaService } from '../prisma/prisma.service';
 
-interface Condition {
-  id: number;
-  question: string;
-  field: string;
-  type: string;
-  operator: string;
-  value: string;
-  order: number;
+interface EligibilityStep {
+  question: any;
+  remainingAids: number;
 }
-
-type UserAnswers = {
-  [key: string]: string | number | boolean;
-};
 
 @Injectable()
 export class EligibilityService {
-  constructor(private readonly aidService: AidService) {}
+  constructor(private prisma: PrismaService) {}
 
-  private convertValue(value: string, type: string): any {
-    console.log('Conversion de valeur:', { value, type });
-    let result;
-    switch (type) {
-      case 'boolean':
-        result = value.toLowerCase() === 'true';
-        break;
-      case 'number':
-        result = Number(value);
-        break;
-      default:
-        result = value;
+  async getNextQuestion(answers: Record<string, any> = {}) {
+    // 1. Récupérer toutes les aides actives
+    const aids = await this.getEligibleAidsByRegion(answers.region);
+    
+    if (aids.length === 0) {
+      return null;
     }
-    console.log('Résultat de conversion:', result);
-    return result;
+
+    // 2. Filtrer les aides encore éligibles avec les réponses actuelles
+    const stillEligibleAids = aids.filter(aid => 
+      this.isAidStillEligible(aid, answers)
+    );
+
+    if (stillEligibleAids.length === 0) {
+      return null;
+    }
+
+    // 3. Trouver la prochaine question non répondue
+    const nextQuestion = await this.findNextQuestion(stillEligibleAids, answers);
+
+    if (!nextQuestion) {
+      return null;
+    }
+
+    return {
+      question: nextQuestion,
+      remainingAids: stillEligibleAids.length
+    };
   }
 
-  private checkCondition(condition: Condition, answers: Record<string, any>): boolean {
-    // Normaliser la casse du champ
-    const normalizedField = condition.field.toLowerCase();
-    const answer = answers[normalizedField] || answers[condition.field];
-    
-    if (answer === undefined) {
-      console.log(`Champ ${condition.field} non trouvé dans les réponses`);
-      return false;
-    }
-
-    console.log('Vérification condition:', {
-      field: condition.field,
-      rawAnswer: answer,
-      rawValue: condition.value,
-      operator: condition.operator,
-      type: condition.type
-    });
-
-    const convertedAnswer = this.convertValue(String(answer), condition.type);
-    const convertedValue = this.convertValue(condition.value, condition.type);
-
-    console.log('Valeurs converties:', {
-      field: condition.field,
-      convertedAnswer,
-      convertedValue,
-      operator: condition.operator,
-      type: condition.type
-    });
-
-    let result = false;
-    // Normaliser l'opérateur
-    const operator = condition.operator.toLowerCase().replace(/\s+/g, '');
-    console.log('Opérateur normalisé:', operator);
-
-    switch (operator) {
-      case '==':
-      case 'equals':
-      case 'equal':
-        result = convertedAnswer === convertedValue;
-        console.log('Comparaison égalité:', { convertedAnswer, convertedValue, result });
-        break;
-
-      case '>':
-      case 'greaterthan':
-      case 'greater':
-        result = Number(convertedAnswer) > Number(convertedValue);
-        console.log('Comparaison supérieur:', { convertedAnswer, convertedValue, result });
-        break;
-
-      case '<':
-      case 'lessthan':
-      case 'less':
-        result = Number(convertedAnswer) < Number(convertedValue);
-        console.log('Comparaison inférieur:', { convertedAnswer, convertedValue, result });
-        break;
-
-      case '>=':
-      case 'greaterthanorequal':
-      case 'greaterorequal':
-        result = Number(convertedAnswer) >= Number(convertedValue);
-        console.log('Comparaison supérieur ou égal:', { convertedAnswer, convertedValue, result });
-        break;
-
-      case '<=':
-      case 'lessthanorequal':
-      case 'lessorequal':
-        result = Number(convertedAnswer) <= Number(convertedValue);
-        console.log('Comparaison inférieur ou égal:', { convertedAnswer, convertedValue, result });
-        break;
-
-      case '!=':
-      case 'notequals':
-      case 'notequal':
-        result = convertedAnswer !== convertedValue;
-        console.log('Comparaison différent:', { convertedAnswer, convertedValue, result });
-        break;
-
-      case 'between':
-        if (condition.field.toLowerCase() === 'age') {
-          const [minAge, maxAge] = condition.value.split(',').map(Number);
-          const age = Number(convertedAnswer);
-          result = age >= minAge && age <= maxAge;
-          console.log('Comparaison entre:', { age, minAge, maxAge, result });
+  private async getEligibleAidsByRegion(region?: string) {
+    return this.prisma.aid.findMany({
+      where: {
+        active: true,
+        ...(region && { region })
+      },
+      include: {
+        conditions: {
+          include: {
+            question: true
+          }
         }
-        break;
+      }
+    });
+  }
 
-      case 'includes':
-      case 'contains':
-        result = condition.value.split(',').includes(String(convertedAnswer));
-        console.log('Vérification inclusion:', { 
-          convertedAnswer, 
-          possibleValues: condition.value.split(','), 
-          result 
-        });
-        break;
+  private isAidStillEligible(aid: any, answers: Record<string, any>): boolean {
+    return aid.conditions.every(condition => {
+      const answer = answers[condition.question.field];
+      
+      // Si pas de réponse pour cette condition, l'aide est encore possible
+      if (answer === undefined) {
+        return true;
+      }
 
+      return this.checkCondition(condition, answer);
+    });
+  }
+
+  private async findNextQuestion(aids: any[], answers: Record<string, any>) {
+    // Récupérer toutes les questions non encore répondues
+    const answeredFields = Object.keys(answers);
+    
+    const unansweredQuestions = await this.prisma.question.findMany({
+      where: {
+        field: {
+          notIn: answeredFields
+        },
+        conditions: {
+          some: {
+            aidId: {
+              in: aids.map(aid => aid.id)
+            }
+          }
+        }
+      },
+      orderBy: { order: 'asc' }
+    });
+
+    // Retourner la première question par ordre de priorité
+    return unansweredQuestions[0] || null;
+  }
+
+  private checkCondition(condition: any, answer: any): boolean {
+    const { operator, value } = condition;
+    
+    switch (operator) {
+      case 'between':
+        const [min, max] = value.split(',').map(Number);
+        const numAnswer = Number(answer);
+        return numAnswer >= min && numAnswer <= max;
+        
+      case 'equals':
+        return String(answer) === String(value);
+        
+      case 'greater_than':
+        return Number(answer) > Number(value);
+        
+      case 'less_than':
+        return Number(answer) < Number(value);
+        
+      case 'in':
+        const allowedValues = value.split(',');
+        return allowedValues.includes(String(answer));
+        
+      case 'not_in':
+        const forbiddenValues = value.split(',');
+        return !forbiddenValues.includes(String(answer));
+        
       default:
-        console.error('Opérateur non reconnu:', operator);
         return false;
     }
-
-    console.log('Résultat final de la condition:', {
-      field: condition.field,
-      result,
-      operator: condition.operator,
-      normalizedOperator: operator
-    });
-
-    return result;
   }
 
-  async checkEligibility(answers: any) {
-    console.log('Vérification éligibilité avec les réponses:', answers);
-    // Extraire les réponses de l'objet answers si nécessaire
-    const userAnswers = answers.answers || answers;
-    console.log('Réponses extraites:', userAnswers);
-
-    const aids = await this.aidService.findAll();
-    console.log('Aides disponibles:', JSON.stringify(aids, null, 2));
+  async getFinalResults(answers: Record<string, any>) {
+    const aids = await this.getEligibleAidsByRegion(answers.region);
     
-    const eligibleAids = aids
-      .filter(aid => {
-        const isActive = aid.active;
-        console.log(`Aide ${aid.title} - Active: ${isActive}`);
-        return isActive;
-      })
-      .filter(aid => {
-        if (userAnswers.region && aid.region !== userAnswers.region) {
-          console.log(`Aide ${aid.title} rejetée: région ne correspond pas (${aid.region} !== ${userAnswers.region})`);
-          return false;
-        }
-        if (!aid.conditions || aid.conditions.length === 0) {
-          console.log(`Aide ${aid.title} acceptée: pas de conditions`);
-          return true;
-        }
-        console.log(`Vérification des conditions pour ${aid.title}:`, aid.conditions);
-        const isEligible = aid.conditions.every(condition => this.checkCondition(condition, userAnswers));
-        console.log(`Aide ${aid.title} ${isEligible ? 'acceptée' : 'rejetée'}: conditions`);
-        return isEligible;
-      })
-      .map(aid => ({
-        id: aid.id,
-        title: aid.title,
-        description: aid.description,
-        link: aid.link,
-        region: aid.region
-      }));
-
-    console.log('Aides éligibles:', JSON.stringify(eligibleAids, null, 2));
-    return eligibleAids;
+    return aids.filter(aid => 
+      aid.conditions.every(condition => 
+        this.checkCondition(condition, answers[condition.question.field])
+      )
+    ).map(aid => ({
+      id: aid.id,
+      title: aid.title,
+      description: aid.description,
+      link: aid.link,
+      region: aid.region
+    }));
   }
-} 
+
+  // Méthode de compatibilité avec l'ancien système
+  async checkEligibility(answers: any) {
+    const userAnswers = answers.answers || answers;
+    return this.getFinalResults(userAnswers);
+  }
+}

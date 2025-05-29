@@ -20,6 +20,21 @@ model AdminUser {
   password String
 }
 
+model Question {
+  id          Int      @id @default(autoincrement())
+  text        String   // "Quel est votre âge ?"
+  field       String   // "age"
+  type        String   // "number", "select", "boolean"
+  options     String?  // JSON pour les options de select
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  conditions  Condition[]
+  
+  @@unique([field])
+}
+
 model Aid {
   id          Int       @id @default(autoincrement())
   title       String
@@ -33,16 +48,14 @@ model Aid {
 }
 
 model Condition {
-  id        Int      @id @default(autoincrement())
-  aidId     Int
-  question  String
-  field     String   // ex: "age"
-  type      String   // "boolean", "number", "select"
-  operator  String   // "==", ">", "<", "includes"
-  value     String   // valeur de comparaison
-  order     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  aid       Aid      @relation(fields: [aidId], references: [id])
+  id          Int      @id @default(autoincrement())
+  aidId       Int
+  questionId  Int
+  operator    String   // "between", "equals", "greater_than", "in"
+  value       String   // "18,35" pour between, "paris,lyon" pour in
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  aid         Aid      @relation(fields: [aidId], references: [id], onDelete: Cascade)
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }

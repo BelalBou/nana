@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { EligibilityController } from './eligibility.controller';
 import { EligibilityService } from './eligibility.service';
-import { AidModule } from '../aid/aid.module';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Module({
-  imports: [AidModule],
   controllers: [EligibilityController],
-  providers: [EligibilityService],
+  providers: [EligibilityService, PrismaService],
 })
-export class EligibilityModule {} 
+export class EligibilityModule {}
