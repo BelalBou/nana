@@ -12,6 +12,7 @@ import {
   Container
 } from '@mui/material';
 import axios from 'axios';
+import { env } from 'process';
 
 interface Question {
   id: number;
@@ -54,10 +55,12 @@ const SmartEligibilityForm: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [availableRegions, setAvailableRegions] = useState<Region[]>([]);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+
   const fetchNextQuestion = async () => {
     try {
       setLoading(true);
-      const response = await axios.post<NextQuestionResponse>('http://localhost:4000/eligibility/next-question', { 
+      const response = await axios.post<NextQuestionResponse>(`${API_BASE_URL}/eligibility/next-question`, { 
         answers 
       });
       
@@ -69,7 +72,7 @@ const SmartEligibilityForm: React.FC = () => {
         setCurrentQuestionIndex(prev => prev + 1);
       } else {
         // Plus de questions, récupérer les résultats finaux
-        const resultsResponse = await axios.post<Aid[]>('http://localhost:4000/eligibility/results', { 
+        const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
           answers 
         });
         setFinalResults(resultsResponse.data);
@@ -93,7 +96,7 @@ const SmartEligibilityForm: React.FC = () => {
     // Appeler fetchNextQuestion sans incrementer currentQuestionIndex ici
     try {
       setLoading(true);
-      const response = await axios.post<NextQuestionResponse>('http://localhost:4000/eligibility/next-question', { 
+      const response = await axios.post<NextQuestionResponse>(`${API_BASE_URL}/eligibility/next-question`, { 
         answers: newAnswers 
       });
       
@@ -105,7 +108,7 @@ const SmartEligibilityForm: React.FC = () => {
         setCurrentQuestionIndex(prev => prev + 1);
       } else {
         // Plus de questions, récupérer les résultats finaux
-        const resultsResponse = await axios.post<Aid[]>('http://localhost:4000/eligibility/results', { 
+        const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
           answers: newAnswers 
         });
         setFinalResults(resultsResponse.data);
@@ -128,15 +131,13 @@ const SmartEligibilityForm: React.FC = () => {
 
   useEffect(() => {
     // Fetch total questions count for progress bar
-    axios.get<Question[]>('http://localhost:4000/questions')
+    axios.get<Question[]>(`${API_BASE_URL}/questions`)
       .then(response => setTotalQuestions(response.data.length))
       .catch(console.error);
 
-    // Fetch available regions from database
-    axios.get<Region[]>('http://localhost:4000/regions')
-      .then(response => setAvailableRegions(response.data))
-      .catch(console.error);
-  }, []);
+    // Plus besoin de récupérer les régions ici car on utilise le hook useRegions
+    // qui récupère les régions depuis les aides existantes
+  }, [API_BASE_URL]);
 
   const renderQuestionInput = () => {
     if (!currentStep) return null;
