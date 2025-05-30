@@ -203,7 +203,16 @@ const SmartEligibilityForm: React.FC = () => {
         );
 
       case 'select':
-        const options = question.options ? JSON.parse(question.options) : [];
+        let options = [];
+        try {
+          if (question.options) {
+            const parsed = JSON.parse(question.options);
+            options = Array.isArray(parsed) ? parsed : [];
+          }
+        } catch (error) {
+          console.error('Erreur lors du parsing des options:', error);
+          options = [];
+        }
         
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>

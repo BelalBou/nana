@@ -21,6 +21,7 @@ import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Settings as Set
 import axios from 'axios';
 import AidForm from './AidForm';
 import ConditionList from './ConditionList';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Aid {
   id: number;
@@ -32,6 +33,7 @@ interface Aid {
 }
 
 const AidList: React.FC = () => {
+  const { token } = useAuth();
   const [aids, setAids] = useState<Aid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,15 +46,26 @@ const AidList: React.FC = () => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
   const fetchAids = useCallback(async () => {
+    if (!token) {
+      setError('Token d\'authentification manquant');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.get<Aid[]>(`${API_BASE_URL}/aids`);
+      const response = await axios.get<Aid[]>(`${API_BASE_URL}/aids`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setAids(response.data);
       setLoading(false);
     } catch (err) {
+      console.error('Erreur lors du chargement des aides:', err);
       setError('Erreur lors du chargement des aides');
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, token]);
 
   useEffect(() => {
     fetchAids();
@@ -69,10 +82,14 @@ const AidList: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (!aidToDelete) return;
+    if (!aidToDelete || !token) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/aids/${aidToDelete}`);
+      await axios.delete(`${API_BASE_URL}/aids/${aidToDelete}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setAids(aids.filter(aid => aid.id !== aidToDelete));
       setOpenDeleteDialog(false);
       setAidToDelete(null);
@@ -82,9 +99,15 @@ const AidList: React.FC = () => {
   };
 
   const handleToggleActive = async (aid: Aid) => {
+    if (!token) return;
+
     try {
       await axios.patch(`${API_BASE_URL}/aids/${aid.id}`, {
         active: !aid.active
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       setAids(aids.map(a => 
         a.id === aid.id ? { ...a, active: !a.active } : a
@@ -95,14 +118,24 @@ const AidList: React.FC = () => {
   };
 
   const handleFormSubmit = async (aidData: Partial<Aid>) => {
+    if (!token) return;
+
     try {
       if (selectedAid) {
-        await axios.patch(`${API_BASE_URL}/aids/${selectedAid.id}`, aidData);
+        await axios.patch(`${API_BASE_URL}/aids/${selectedAid.id}`, aidData, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         setAids(aids.map(a => 
           a.id === selectedAid.id ? { ...a, ...aidData } : a
         ));
       } else {
-        const response = await axios.post<Aid>(`${API_BASE_URL}/aids`, aidData);
+        const response = await axios.post<Aid>(`${API_BASE_URL}/aids`, aidData, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         setAids([...aids, response.data]);
       }
       setOpenForm(false);
