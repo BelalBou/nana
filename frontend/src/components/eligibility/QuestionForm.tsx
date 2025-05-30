@@ -37,6 +37,12 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
   const getInitialValue = (type: string) => {
     // Si on a déjà une valeur (navigation retour), l'utiliser
     if (currentValue !== undefined) {
+      // Pour les boutons oui/non, convertir les valeurs boolean en yes/no
+      if (type === 'radio') {
+        if (currentValue === 'true' || currentValue === true) return 'yes';
+        if (currentValue === 'false' || currentValue === false) return 'no';
+        return currentValue;
+      }
       return currentValue;
     }
     
@@ -58,7 +64,8 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
 
   // Mettre à jour la valeur quand la condition change ou qu'on a une valeur courante
   useEffect(() => {
-    setValue(getInitialValue(condition.type));
+    const newValue = getInitialValue(condition.type);
+    setValue(newValue);
   }, [condition.id, condition.type, currentValue]);
 
   const handleNext = () => {
@@ -160,21 +167,48 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         );
       case 'radio':
         return (
-          <RadioGroup
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          >
-            <FormControlLabel 
-              value="yes" 
-              control={<Radio />} 
-              label="Oui" 
-            />
-            <FormControlLabel 
-              value="no" 
-              control={<Radio />} 
-              label="Non" 
-            />
-          </RadioGroup>
+          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+            <Button
+              variant={value === 'yes' ? 'contained' : 'outlined'}
+              color={value === 'yes' ? 'success' : 'inherit'}
+              onClick={() => setValue('yes')}
+              sx={{
+                minHeight: 56,
+                flex: 1,
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                borderWidth: 2,
+                '&:hover': {
+                  borderWidth: 2,
+                },
+                ...(value === 'yes' && {
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
+                }),
+              }}
+            >
+              ✅ Oui
+            </Button>
+            <Button
+              variant={value === 'no' ? 'contained' : 'outlined'}
+              color={value === 'no' ? 'error' : 'inherit'}
+              onClick={() => setValue('no')}
+              sx={{
+                minHeight: 56,
+                flex: 1,
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                borderWidth: 2,
+                '&:hover': {
+                  borderWidth: 2,
+                },
+                ...(value === 'no' && {
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                }),
+              }}
+            >
+              ❌ Non
+            </Button>
+          </Box>
         );
       default:
         return (
@@ -204,15 +238,15 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Question {currentStep + 1} sur {totalSteps}
+            Question {currentStep} sur {totalSteps}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {Math.round(((currentStep + 1) / totalSteps) * 100)}%
+            {Math.round((currentStep / totalSteps) * 100)}%
           </Typography>
         </Box>
         <LinearProgress 
           variant="determinate" 
-          value={((currentStep + 1) / totalSteps) * 100}
+          value={(currentStep / totalSteps) * 100}
           sx={{ height: 8, borderRadius: 4 }}
         />
       </Box>
@@ -221,7 +255,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         {condition.question}
       </Typography>
       
-      <Box sx={{ mt: 2 }} onKeyPress={handleKeyPress}>
+      <Box sx={{ mt: 2 }} onKeyDown={handleKeyPress} tabIndex={0}>
         {renderInput()}
       </Box>
 
@@ -248,7 +282,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
           disabled={isNextDisabled()}
           sx={{ minWidth: 120 }}
         >
-          {currentStep === totalSteps - 1 ? 'Terminer' : 'Suivant'}
+          {currentStep === totalSteps ? 'Terminer' : 'Suivant'}
         </Button>
       </Stack>
     </Box>

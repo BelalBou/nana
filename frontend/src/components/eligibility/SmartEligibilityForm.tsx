@@ -217,6 +217,12 @@ const SmartEligibilityForm: React.FC = () => {
     fetchNextQuestion();
   };
 
+  // Nouvelle fonction pour recommencer avec rechargement complet
+  const restartQuestionnaire = () => {
+    // Forcer un rechargement complet de la page
+    window.location.href = '/';
+  };
+
   useEffect(() => {
     // Fetch total questions count for progress bar
     axios.get<Question[]>(`${API_BASE_URL}/questions`)
@@ -236,73 +242,48 @@ const SmartEligibilityForm: React.FC = () => {
       case 'boolean':
         return (
           <Box sx={{ mt: 3 }}>
-            <RadioGroup
-              value={pendingAnswer || 'no'}
-              onChange={(e) => handleAnswer(e.target.value === 'yes')}
-              sx={{ gap: 2 }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  border: '2px solid',
-                  borderColor: pendingAnswer === true ? 'primary.main' : 'grey.200',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  backgroundColor: pendingAnswer === true ? 'primary.50' : 'transparent',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'primary.25',
-                  },
-                }}
+            <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+              <Button
+                variant={pendingAnswer === true ? 'contained' : 'outlined'}
+                color={pendingAnswer === true ? 'success' : 'inherit'}
                 onClick={() => handleAnswer(true)}
-              >
-                <FormControlLabel 
-                  value="yes" 
-                  control={<Radio />} 
-                  label="Oui" 
-                  sx={{ 
-                    width: '100%',
-                    m: 0,
-                    '& .MuiFormControlLabel-label': {
-                      fontSize: '1.1rem',
-                      fontWeight: 500,
-                    },
-                  }}
-                />
-              </Paper>
-              
-              <Paper
-                elevation={0}
                 sx={{
-                  p: 2,
-                  border: '2px solid',
-                  borderColor: pendingAnswer === false ? 'primary.main' : 'grey.200',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  backgroundColor: pendingAnswer === false ? 'primary.50' : 'transparent',
+                  minHeight: 64,
+                  flex: 1,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderWidth: 2,
                   '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'primary.25',
+                    borderWidth: 2,
                   },
+                  ...(pendingAnswer === true && {
+                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
+                  }),
                 }}
-                onClick={() => handleAnswer(false)}
               >
-                <FormControlLabel 
-                  value="no" 
-                  control={<Radio />} 
-                  label="Non" 
-                  sx={{ 
-                    width: '100%',
-                    m: 0,
-                    '& .MuiFormControlLabel-label': {
-                      fontSize: '1.1rem',
-                      fontWeight: 500,
-                    },
-                  }}
-                />
-              </Paper>
-            </RadioGroup>
+                ✅ Oui
+              </Button>
+              <Button
+                variant={pendingAnswer === false ? 'contained' : 'outlined'}
+                color={pendingAnswer === false ? 'error' : 'inherit'}
+                onClick={() => handleAnswer(false)}
+                sx={{
+                  minHeight: 64,
+                  flex: 1,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderWidth: 2,
+                  '&:hover': {
+                    borderWidth: 2,
+                  },
+                  ...(pendingAnswer === false && {
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                  }),
+                }}
+              >
+                ❌ Non
+              </Button>
+            </Box>
           </Box>
         );
 
@@ -419,6 +400,9 @@ const SmartEligibilityForm: React.FC = () => {
   };
 
   const isNextDisabled = () => {
+    if (currentStep?.question.type === 'boolean') {
+      return pendingAnswer === null;
+    }
     return pendingAnswer === null || pendingAnswer === '';
   };
 
@@ -638,7 +622,7 @@ const SmartEligibilityForm: React.FC = () => {
                 <Button
                   variant="contained"
                   startIcon={<RefreshIcon />}
-                  onClick={startQuestionnaire}
+                  onClick={restartQuestionnaire}
                   sx={{ minWidth: 200 }}
                 >
                   Recommencer

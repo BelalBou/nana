@@ -42,6 +42,14 @@ const Header: React.FC = () => {
     setMobileOpen(false);
   };
 
+  // Fonction pour gérer le clic sur le logo et réinitialiser le questionnaire
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Recharger complètement la page pour réinitialiser le questionnaire
+    window.location.replace('/');
+  };
+
   const menuItems = [
     { label: 'Accueil', path: '/', icon: <HomeIcon /> },
   ];
@@ -139,17 +147,20 @@ const Header: React.FC = () => {
           <Toolbar sx={{ px: { xs: 0, sm: 2 }, minHeight: { xs: 64, sm: 72 } }}>
             {/* Logo et titre */}
             <Box 
-              component={Link}
-              to="/"
+              onClick={handleLogoClick}
               sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 flexGrow: 1,
+                cursor: 'pointer',
                 textDecoration: 'none',
                 color: 'inherit',
+                userSelect: 'none',
                 '&:hover': {
                   textDecoration: 'none',
+                  transform: 'scale(1.02)',
                 },
+                transition: 'transform 0.2s ease-in-out',
               }}
             >
               <Box
