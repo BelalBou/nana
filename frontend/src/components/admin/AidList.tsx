@@ -16,6 +16,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Card,
+  CardContent,
+  CardActions,
+  useTheme,
+  useMediaQuery,
+  Chip,
+  Stack,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import axios from 'axios';
@@ -34,6 +41,8 @@ interface Aid {
 
 const AidList: React.FC = () => {
   const { token } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [aids, setAids] = useState<Aid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +162,86 @@ const AidList: React.FC = () => {
     return <Typography color="error">{error}</Typography>;
   }
 
+  // Composant Card pour mobile
+  const AidCard: React.FC<{ aid: Aid }> = ({ aid }) => (
+    <Card
+      elevation={0}
+      sx={{
+        border: '1px solid',
+        borderColor: 'grey.200',
+        borderRadius: 2,
+        mb: 2,
+        '&:hover': {
+          borderColor: 'primary.main',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        },
+        transition: 'all 0.2s ease-in-out',
+      }}
+    >
+      <CardContent sx={{ pb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
+            {aid.title}
+          </Typography>
+          <Switch
+            checked={aid.active}
+            onChange={() => handleToggleActive(aid)}
+            size="small"
+          />
+        </Box>
+        
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.5 }}>
+          {aid.description}
+        </Typography>
+        
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <Chip
+            label={aid.region}
+            size="small"
+            color="primary"
+            variant="outlined"
+          />
+          <Chip
+            label={aid.active ? 'Actif' : 'Inactif'}
+            size="small"
+            color={aid.active ? 'success' : 'default'}
+            variant={aid.active ? 'filled' : 'outlined'}
+          />
+        </Stack>
+        
+        <Typography variant="body2" color="primary.main" sx={{ textDecoration: 'underline' }}>
+          <a href={aid.link} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
+            Voir le lien
+          </a>
+        </Typography>
+      </CardContent>
+      
+      <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+        <IconButton
+          onClick={() => handleEdit(aid)}
+          size="small"
+          sx={{ color: 'primary.main' }}
+        >
+          <EditIcon />
+        </IconButton>
+        <IconButton
+          onClick={() => setSelectedAidForConditions(aid.id)}
+          size="small"
+          sx={{ color: 'info.main' }}
+        >
+          <SettingsIcon />
+        </IconButton>
+        <IconButton
+          onClick={() => handleDelete(aid.id)}
+          size="small"
+          sx={{ color: 'error.main' }}
+        >
+          <DeleteIcon />
+        </IconButton>
+      </CardActions>
+    </Card>
+  );
+
   return (
     <Box>
       <Box sx={{ p: 3 }}>
@@ -183,51 +272,59 @@ const AidList: React.FC = () => {
               </Button>
             </Box>
 
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Titre</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Région</TableCell>
-                    <TableCell>Lien</TableCell>
-                    <TableCell>Statut</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {aids.map((aid) => (
-                    <TableRow key={aid.id}>
-                      <TableCell>{aid.title}</TableCell>
-                      <TableCell>{aid.description}</TableCell>
-                      <TableCell>{aid.region}</TableCell>
-                      <TableCell>
-                        <a href={aid.link} target="_blank" rel="noopener noreferrer">
-                          Voir le lien
-                        </a>
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={aid.active}
-                          onChange={() => handleToggleActive(aid)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <IconButton onClick={() => handleEdit(aid)}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton onClick={() => handleDelete(aid.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                        <IconButton onClick={() => setSelectedAidForConditions(aid.id)}>
-                          <SettingsIcon />
-                        </IconButton>
-                      </TableCell>
+            {isMobile ? (
+              <Box>
+                {aids.map((aid) => (
+                  <AidCard key={aid.id} aid={aid} />
+                ))}
+              </Box>
+            ) : (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Titre</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>Région</TableCell>
+                      <TableCell>Lien</TableCell>
+                      <TableCell>Statut</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {aids.map((aid) => (
+                      <TableRow key={aid.id}>
+                        <TableCell>{aid.title}</TableCell>
+                        <TableCell>{aid.description}</TableCell>
+                        <TableCell>{aid.region}</TableCell>
+                        <TableCell>
+                          <a href={aid.link} target="_blank" rel="noopener noreferrer">
+                            Voir le lien
+                          </a>
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={aid.active}
+                            onChange={() => handleToggleActive(aid)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <IconButton onClick={() => handleEdit(aid)}>
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton onClick={() => handleDelete(aid.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                          <IconButton onClick={() => setSelectedAidForConditions(aid.id)}>
+                            <SettingsIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </>
         )}
 

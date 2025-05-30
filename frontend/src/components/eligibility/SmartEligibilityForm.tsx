@@ -93,12 +93,25 @@ const SmartEligibilityForm: React.FC = () => {
   // Fonction pour ouvrir le client email avec un mailto simple
   const openEmailClient = (subject?: string) => {
     const email = 'nastassia_dmrtds@outlook.com';
-    const mailtoUrl = subject 
-      ? `mailto:${email}?subject=${encodeURIComponent(subject)}`
-      : `mailto:${email}`;
     
-    // Ouvrir dans une nouvelle fenêtre pour éviter les problèmes de navigation
-    window.open(mailtoUrl, '_self');
+    try {
+      const mailtoUrl = subject 
+        ? `mailto:${email}?subject=${encodeURIComponent(subject)}`
+        : `mailto:${email}`;
+      
+      // Essayer d'ouvrir le client email
+      const newWindow = window.open(mailtoUrl, '_self');
+      
+      // Si l'ouverture échoue après 100ms, copier l'email
+      setTimeout(() => {
+        if (!newWindow || newWindow.closed) {
+          copyEmailToClipboard();
+        }
+      }, 100);
+    } catch (error) {
+      console.log('Erreur avec mailto, copie de l\'email:', error);
+      copyEmailToClipboard();
+    }
   };
 
   const fetchNextQuestion = async () => {

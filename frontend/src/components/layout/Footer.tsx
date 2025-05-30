@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -8,6 +8,7 @@ import {
   Divider,
   Stack,
   useTheme,
+  Snackbar,
 } from '@mui/material';
 import {
   Email as EmailIcon,
@@ -22,12 +23,53 @@ import {
 const Footer: React.FC = () => {
   const theme = useTheme();
   const currentYear = new Date().getFullYear();
+  const [showCopySnackbar, setShowCopySnackbar] = useState(false);
+
+  // Fonction pour gérer les clics sur email avec fallback
+  const handleEmailClick = (email: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    
+    try {
+      // Essayer d'ouvrir le client email
+      const mailtoUrl = `mailto:${email}`;
+      const newWindow = window.open(mailtoUrl, '_blank');
+      
+      // Si l'ouverture échoue, copier l'email
+      setTimeout(() => {
+        if (!newWindow || newWindow.closed) {
+          copyToClipboard(email);
+        }
+      }, 100);
+    } catch (error) {
+      console.log('Erreur avec mailto, copie de l\'email:', error);
+      copyToClipboard(email);
+    }
+  };
+
+  // Fonction pour copier l'email dans le presse-papier
+  const copyToClipboard = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setShowCopySnackbar(true);
+    } catch (err) {
+      console.error('Erreur lors de la copie:', err);
+      // Fallback pour les navigateurs plus anciens
+      const textArea = document.createElement('textarea');
+      textArea.value = email;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShowCopySnackbar(true);
+    }
+  };
 
   const contactInfo = [
     {
       icon: <EmailIcon />,
       text: 'contact@immoaide.fr',
       href: 'mailto:contact@immoaide.fr',
+      email: 'contact@immoaide.fr',
     },
     {
       icon: <PhoneIcon />,
@@ -253,20 +295,42 @@ const Footer: React.FC = () => {
                   >
                     {contact.icon}
                   </Box>
-                  <Link
-                    href={contact.href}
-                    sx={{
-                      color: 'grey.300',
-                      textDecoration: 'none',
-                      fontSize: '0.9rem',
-                      '&:hover': {
-                        color: '#14B8A6',
-                      },
-                      transition: 'color 0.2s ease-in-out',
-                    }}
-                  >
-                    {contact.text}
-                  </Link>
+                  {contact.email ? (
+                    <Link
+                      component="button"
+                      onClick={(e) => handleEmailClick(contact.email!, e)}
+                      sx={{
+                        color: 'grey.300',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        '&:hover': {
+                          color: '#14B8A6',
+                        },
+                        transition: 'color 0.2s ease-in-out',
+                      }}
+                    >
+                      {contact.text}
+                    </Link>
+                  ) : (
+                    <Link
+                      href={contact.href}
+                      sx={{
+                        color: 'grey.300',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        '&:hover': {
+                          color: '#14B8A6',
+                        },
+                        transition: 'color 0.2s ease-in-out',
+                      }}
+                    >
+                      {contact.text}
+                    </Link>
+                  )}
                 </Box>
               ))}
             </Stack>
@@ -302,6 +366,15 @@ const Footer: React.FC = () => {
           </Typography>
         </Box>
       </Container>
+
+      {/* Snackbar pour confirmer la copie */}
+      <Snackbar
+        open={showCopySnackbar}
+        autoHideDuration={3000}
+        onClose={() => setShowCopySnackbar(false)}
+        message="Email copié dans le presse-papier !"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Box>
   );
 };

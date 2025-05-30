@@ -22,6 +22,11 @@ import {
   InputLabel,
   Chip,
   Stack,
+  Card,
+  CardContent,
+  CardActions,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import axios from 'axios';
@@ -36,6 +41,8 @@ interface Question {
 }
 
 const QuestionList: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -164,6 +171,96 @@ const QuestionList: React.FC = () => {
     }
   };
 
+  // Composant Card pour mobile
+  const QuestionCard: React.FC<{ question: Question }> = ({ question }) => {
+    const options = question.type === 'select' && question.options 
+      ? JSON.parse(question.options) 
+      : [];
+
+    return (
+      <Card
+        elevation={0}
+        sx={{
+          border: '1px solid',
+          borderColor: 'grey.200',
+          borderRadius: 2,
+          mb: 2,
+          '&:hover': {
+            borderColor: 'primary.main',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          },
+          transition: 'all 0.2s ease-in-out',
+        }}
+      >
+        <CardContent sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+            {question.text}
+          </Typography>
+          
+          <Box sx={{ mb: 2 }}>
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+              <Chip
+                label={`Champ: ${question.field}`}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+              <Chip
+                label={`Type: ${question.type}`}
+                size="small"
+                color="secondary"
+                variant="outlined"
+              />
+              <Chip
+                label={`Ordre: ${question.order}`}
+                size="small"
+                color="default"
+                variant="outlined"
+              />
+            </Stack>
+          </Box>
+
+          {options.length > 0 && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 500 }}>
+                Options disponibles:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {options.map((option: string, index: number) => (
+                  <Chip
+                    key={index}
+                    label={option}
+                    size="small"
+                    sx={{ mr: 0.5, mb: 0.5 }}
+                    color="info"
+                    variant="filled"
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+        </CardContent>
+        
+        <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+          <IconButton
+            onClick={() => handleEdit(question)}
+            size="small"
+            sx={{ color: 'primary.main' }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => handleDelete(question.id)}
+            size="small"
+            sx={{ color: 'error.main' }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </CardActions>
+      </Card>
+    );
+  };
+
   if (loading) {
     return <Typography>Chargement...</Typography>;
   }
@@ -197,54 +294,62 @@ const QuestionList: React.FC = () => {
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Question</TableCell>
-              <TableCell>Champ</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Options</TableCell>
-              <TableCell>Ordre</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {questions.map((question) => (
-              <TableRow key={question.id}>
-                <TableCell>{question.text}</TableCell>
-                <TableCell>{question.field}</TableCell>
-                <TableCell>{question.type}</TableCell>
-                <TableCell>
-                  {question.type === 'select' && question.options ? (
-                    <Box>
-                      {JSON.parse(question.options).map((option: string, index: number) => (
-                        <Chip
-                          key={index}
-                          label={option}
-                          size="small"
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      ))}
-                    </Box>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>{question.order}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(question)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(question.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+      {isMobile ? (
+        <Box>
+          {questions.map((question) => (
+            <QuestionCard key={question.id} question={question} />
+          ))}
+        </Box>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Question</TableCell>
+                <TableCell>Champ</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Options</TableCell>
+                <TableCell>Ordre</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {questions.map((question) => (
+                <TableRow key={question.id}>
+                  <TableCell>{question.text}</TableCell>
+                  <TableCell>{question.field}</TableCell>
+                  <TableCell>{question.type}</TableCell>
+                  <TableCell>
+                    {question.type === 'select' && question.options ? (
+                      <Box>
+                        {JSON.parse(question.options).map((option: string, index: number) => (
+                          <Chip
+                            key={index}
+                            label={option}
+                            size="small"
+                            sx={{ mr: 0.5, mb: 0.5 }}
+                          />
+                        ))}
+                      </Box>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell>{question.order}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleEdit(question)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(question.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="md" fullWidth>
         <DialogTitle>

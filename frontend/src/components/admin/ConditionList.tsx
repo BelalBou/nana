@@ -20,6 +20,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  Stack,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import axios from 'axios';
@@ -110,12 +115,35 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
   }, [fetchConditions]);
 
   const handleEdit = (condition: Condition) => {
+    console.log('🔍 Condition à éditer:', condition);
+    console.log('🔍 Operator reçu:', condition.operator);
+    
     setSelectedCondition(condition);
-    setFormData({
-      questionId: condition.questionId,
-      operator: condition.operator || 'equals',
+    
+    // Normaliser l'opérateur de snake_case vers camelCase
+    const normalizeOperator = (operator: string) => {
+      const operatorMap: { [key: string]: string } = {
+        'less_than': 'lessThan',
+        'greater_than': 'greaterThan',
+        'not_equals': 'notEquals',
+        'equals': 'equals',
+        'between': 'between',
+        'contains': 'contains'
+      };
+      return operatorMap[operator] || 'equals';
+    };
+    
+    const newFormData = {
+      questionId: condition.questionId || condition.question?.id || '',
+      operator: normalizeOperator(condition.operator),
       value: String(condition.value || ''),
       aidId: condition.aidId
+    };
+    
+    console.log('🔍 FormData après normalisation:', newFormData);
+    setFormData({
+      ...newFormData,
+      questionId: typeof newFormData.questionId === 'number' ? newFormData.questionId : ''
     });
     setOpenForm(true);
   };
@@ -140,13 +168,31 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
 
   const handleFormSubmit = async () => {
     try {
+      // Convertir l'opérateur de camelCase vers snake_case pour le backend
+      const denormalizeOperator = (operator: string) => {
+        const operatorMap: { [key: string]: string } = {
+          'lessThan': 'less_than',
+          'greaterThan': 'greater_than',
+          'notEquals': 'not_equals',
+          'equals': 'equals',
+          'between': 'between',
+          'contains': 'contains'
+        };
+        return operatorMap[operator] || operator;
+      };
+
+      const submissionData = {
+        ...formData,
+        operator: denormalizeOperator(formData.operator)
+      };
+
       if (selectedCondition) {
-        const response = await axios.patch(`${API_BASE_URL}/conditions/${selectedCondition.id}`, formData);
+        const response = await axios.patch(`${API_BASE_URL}/conditions/${selectedCondition.id}`, submissionData);
         console.log('Condition mise à jour:', response.data);
         // Recharger les conditions pour avoir les dernières données
         fetchConditions();
       } else {
-        const response = await axios.post<Condition>(`${API_BASE_URL}/conditions`, formData);
+        const response = await axios.post<Condition>(`${API_BASE_URL}/conditions`, submissionData);
         console.log('Condition créée:', response.data);
         // Recharger les conditions pour avoir les dernières données
         fetchConditions();
@@ -165,6 +211,99 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
     }
   };
 
+  // Composant Card pour mobile
+  const ConditionCard: React.FC<{ condition: Condition }> = ({ condition }) => {
+    const getOperatorLabel = (operator: string) => {
+      const operators = {
+        'equals': 'Égal à',
+        'notEquals': 'Différent de',
+        'greaterThan': 'Supérieur à',
+        'lessThan': 'Inférieur à',
+        'between': 'Entre',
+        'contains': 'Contient'
+      };
+      return operators[operator as keyof typeof operators] || operator;
+    };
+
+    return (
+      <Card
+        elevation={0}
+        sx={{
+          border: '1px solid',
+          borderColor: 'grey.200',
+          borderRadius: 2,
+          mb: 2,
+          '&:hover': {
+            borderColor: 'primary.main',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          },
+          transition: 'all 0.2s ease-in-out',
+        }}
+      >
+        <CardContent sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+            {condition.question?.text || 'Question non trouvée'}
+          </Typography>
+          
+          <Stack spacing={1} sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Champ:
+              </Typography>
+              <Chip
+                label={condition.question?.field || 'Non défini'}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Type:
+              </Typography>
+              <Chip
+                label={condition.question?.type || 'Non défini'}
+                size="small"
+                color="secondary"
+                variant="outlined"
+              />
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                Condition:
+              </Typography>
+              <Chip
+                label={`${getOperatorLabel(condition.operator)} "${condition.value}"`}
+                size="small"
+                color="info"
+                variant="filled"
+              />
+            </Box>
+          </Stack>
+        </CardContent>
+        
+        <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+          <IconButton
+            onClick={() => handleEdit(condition)}
+            size="small"
+            sx={{ color: 'primary.main' }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => handleDelete(condition.id)}
+            size="small"
+            sx={{ color: 'error.main' }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </CardActions>
+      </Card>
+    );
+  };
+
   if (loading) {
     return <Typography>Chargement...</Typography>;
   }
@@ -175,8 +314,10 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h5">Conditions</Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Conditions
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -190,12 +331,14 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
             });
             setOpenForm(true);
           }}
+          sx={{ mb: 2 }}
         >
           Nouvelle Condition
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
+      {/* Affichage en tableau pour les écrans larges */}
+      <TableContainer component={Paper} sx={{ display: { xs: 'none', md: 'block' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -238,6 +381,13 @@ const ConditionList: React.FC<ConditionListProps> = ({ aidId }) => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Affichage en cartes pour les écrans mobiles */}
+      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+        {conditions.map((condition) => (
+          <ConditionCard key={condition.id} condition={condition} />
+        ))}
+      </Box>
 
       <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="md" fullWidth>
         <DialogTitle>

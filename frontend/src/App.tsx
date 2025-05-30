@@ -267,6 +267,9 @@ const AppContent = () => {
         component="main" 
         sx={{ 
           flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
           pt: { xs: 2, sm: 3, md: 4 },
           pb: { xs: 2, sm: 3, md: 4 },
         }}
