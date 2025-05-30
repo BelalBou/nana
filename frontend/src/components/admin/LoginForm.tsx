@@ -11,11 +11,7 @@ import {
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 
-interface LoginFormProps {
-  onLoginSuccess: (token: string) => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+const LoginForm: React.FC<{ onLoginSuccess: () => void }> = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -31,16 +27,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
+      console.log('Tentative de connexion vers:', `${API_BASE_URL}/auth/login`);
       const response = await axios.post<{ access_token: string }>(`${API_BASE_URL}/auth/login`, {
         email,
         password,
       });
       
+      console.log('Réponse de connexion:', response.data);
+      
       // Utiliser la méthode login du contexte
       login(response.data.access_token);
-      onLoginSuccess(response.data.access_token);
+      
+      console.log('Redirection vers /admin');
       navigate('/admin');
     } catch (err) {
+      console.error('Erreur de connexion:', err);
       setError('Identifiants invalides');
     } finally {
       setLoading(false);

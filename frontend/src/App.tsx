@@ -57,8 +57,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppContent = () => {
-  const { login } = useAuth();
-
   return (
     <Box sx={{ 
       display: 'flex', 
@@ -73,7 +71,7 @@ const AppContent = () => {
           <Route path="/" element={<SmartEligibilityForm />} />
           
           {/* Routes admin */}
-          <Route path="/login" element={<LoginForm onLoginSuccess={login} />} />
+          <Route path="/login" element={<LoginForm onLoginSuccess={() => {}} />} />
           <Route 
             path="/admin" 
             element={
