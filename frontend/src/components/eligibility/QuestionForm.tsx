@@ -95,14 +95,11 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 {regions.length === 0 && !regionsLoading ? (
                   <MenuItem disabled>Aucune région disponible</MenuItem>
                 ) : (
-                  regions.map((region: Region) => {
-                    console.log('Rendu région dans question:', region);
-                    return (
-                      <MenuItem key={region.id} value={region.name}>
-                        {region.name}
-                      </MenuItem>
-                    );
-                  })
+                  regions.map((region: Region) => (
+                    <MenuItem key={region.id} value={region.name}>
+                      {region.name}
+                    </MenuItem>
+                  ))
                 )}
               </Select>
             </FormControl>
@@ -167,8 +164,16 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
             value={value}
             onChange={(e) => setValue(e.target.value)}
           >
-            <FormControlLabel value="yes" control={<Radio />} label="Oui" />
-            <FormControlLabel value="no" control={<Radio />} label="Non" />
+            <FormControlLabel 
+              value="yes" 
+              control={<Radio />} 
+              label="Oui" 
+            />
+            <FormControlLabel 
+              value="no" 
+              control={<Radio />} 
+              label="Non" 
+            />
           </RadioGroup>
         );
       default:

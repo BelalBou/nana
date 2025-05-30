@@ -139,13 +139,18 @@ const Header: React.FC = () => {
           <Toolbar sx={{ px: { xs: 0, sm: 2 }, minHeight: { xs: 64, sm: 72 } }}>
             {/* Logo et titre */}
             <Box 
+              component={Link}
+              to="/"
               sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 flexGrow: 1,
-                cursor: 'pointer',
+                textDecoration: 'none',
+                color: 'inherit',
+                '&:hover': {
+                  textDecoration: 'none',
+                },
               }}
-              onClick={() => navigate('/')}
             >
               <Box
                 sx={{
@@ -217,16 +222,19 @@ const Header: React.FC = () => {
                   <Button
                     variant="outlined"
                     startIcon={<AdminIcon />}
-                    onClick={() => navigate('/admin')}
+                    component={Link}
+                    to="/admin"
                     sx={{
                       borderColor: 'grey.300',
                       color: 'text.primary',
                       fontWeight: 500,
                       px: 3,
+                      textDecoration: 'none',
                       '&:hover': {
                         borderColor: 'primary.main',
                         backgroundColor: 'primary.50',
                         color: 'primary.main',
+                        textDecoration: 'none',
                       },
                     }}
                   >
