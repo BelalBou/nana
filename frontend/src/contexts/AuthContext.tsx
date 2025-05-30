@@ -31,13 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    console.log('🔄 useEffect token changé:', token ? 'TOKEN_PRÉSENT' : 'TOKEN_ABSENT');
     
     if (token) {
       try {
         // Décoder le token JWT pour récupérer les infos utilisateur
         const decoded = jwtDecode<JwtPayload>(token);
-        console.log('🔓 Token décodé:', decoded);
         
         localStorage.setItem('adminToken', token);
         // Configuration d'axios pour inclure le token dans toutes les requêtes
@@ -49,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: decoded.email 
         });
         
-        console.log('✅ Utilisateur défini:', { id: decoded.sub, email: decoded.email });
       } catch (error) {
         console.error('❌ Erreur lors du décodage du token:', error);
         // Token invalide, on le supprime
@@ -58,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
       }
     } else {
-      console.log('🧹 Nettoyage: token absent');
       localStorage.removeItem('adminToken');
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
@@ -66,23 +62,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token]);
 
   const login = (newToken: string) => {
-    console.log('🔐 AuthContext.login() appelé avec token:', newToken ? 'TOKEN_PRÉSENT' : 'TOKEN_ABSENT');
-    console.log('🔐 Longueur du token:', newToken?.length);
+
     setToken(newToken);
-    console.log('🔐 setToken() appelé');
   };
 
   const logout = () => {
-    console.log('🚪 AuthContext.logout() appelé');
     setToken(null);
   };
 
-  console.log('🔍 État actuel:', { 
-    hasToken: !!token, 
-    hasUser: !!user, 
-    isAuthenticated: !!token,
-    userEmail: user?.email 
-  });
+
 
   return (
     <AuthContext.Provider value={{

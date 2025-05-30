@@ -1,20 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  CircularProgress,
-  Card,
-  CardContent,
-  LinearProgress,
-  Chip,
-  Alert,
-  Container,
-  Stack,
-  Snackbar
-} from '@mui/material';
-import { ArrowBack, ArrowForward, ContentCopy } from '@mui/icons-material';
 import axios from 'axios';
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  RadioGroup, 
+  Radio, 
+  FormControlLabel, 
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress, 
+  Alert, 
+  Container,
+  Paper,
+  Fade,
+  LinearProgress,
+  Snackbar,
+  useTheme,
+  Stack,
+  Chip,
+} from '@mui/material';
+import {
+  Quiz as QuizIcon,
+  CheckCircle as CheckIcon,
+  ArrowBack,
+  ArrowForward,
+  Refresh as RefreshIcon,
+  Email as EmailIcon,
+  ContentCopy as CopyIcon,
+} from '@mui/icons-material';
+import { useRegions } from '../../hooks/useRegions';
 
 interface Question {
   id: number;
@@ -42,12 +60,10 @@ interface NextQuestionResponse {
   remainingAids?: number;
 }
 
-interface Region {
-  id: number;
-  name: string;
-}
-
 const SmartEligibilityForm: React.FC = () => {
+  const theme = useTheme();
+  const { regions } = useRegions();
+  
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentStep, setCurrentStep] = useState<QuestionStep | null>(null);
   const [loading, setLoading] = useState(false);
@@ -206,77 +222,186 @@ const SmartEligibilityForm: React.FC = () => {
     switch (question.type) {
       case 'boolean':
         return (
-          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-            <Button
-              variant={pendingAnswer === true ? "contained" : "outlined"}
-              color="primary"
-              onClick={() => setPendingAnswer(true)}
-              sx={{ flex: 1 }}
+          <Box sx={{ mt: 3 }}>
+            <RadioGroup
+              value={pendingAnswer || 'no'}
+              onChange={(e) => handleAnswer(e.target.value === 'yes')}
+              sx={{ gap: 2 }}
             >
-              Oui
-            </Button>
-            <Button
-              variant={pendingAnswer === false ? "contained" : "outlined"}
-              onClick={() => setPendingAnswer(false)}
-              sx={{ flex: 1 }}
-            >
-              Non
-            </Button>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  border: '2px solid',
+                  borderColor: pendingAnswer === true ? 'primary.main' : 'grey.200',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  backgroundColor: pendingAnswer === true ? 'primary.50' : 'transparent',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'primary.25',
+                  },
+                }}
+                onClick={() => handleAnswer(true)}
+              >
+                <FormControlLabel 
+                  value="yes" 
+                  control={<Radio />} 
+                  label="Oui" 
+                  sx={{ 
+                    width: '100%',
+                    m: 0,
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                    },
+                  }}
+                />
+              </Paper>
+              
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  border: '2px solid',
+                  borderColor: pendingAnswer === false ? 'primary.main' : 'grey.200',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  backgroundColor: pendingAnswer === false ? 'primary.50' : 'transparent',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'primary.25',
+                  },
+                }}
+                onClick={() => handleAnswer(false)}
+              >
+                <FormControlLabel 
+                  value="no" 
+                  control={<Radio />} 
+                  label="Non" 
+                  sx={{ 
+                    width: '100%',
+                    m: 0,
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                    },
+                  }}
+                />
+              </Paper>
+            </RadioGroup>
           </Box>
         );
 
       case 'select':
-        let options = [];
-        try {
-          if (question.options) {
-            const parsed = JSON.parse(question.options);
-            options = Array.isArray(parsed) ? parsed : [];
-          }
-        } catch (error) {
-          console.error('Erreur lors du parsing des options:', error);
-          options = [];
+        if (question.field === 'region') {
+          return (
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth>
+                <InputLabel>Sélectionnez votre région</InputLabel>
+                <Select
+                  value={pendingAnswer || ''}
+                  onChange={(e) => handleAnswer(e.target.value)}
+                  label="Sélectionnez votre région"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  {regions.map((region) => (
+                    <MenuItem key={region.id} value={region.name}>
+                      {region.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          );
         }
         
-        return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 3 }}>
-            {options.map((option: string) => (
-              <Button
-                key={option}
-                variant={pendingAnswer === option ? "contained" : "outlined"}
-                onClick={() => setPendingAnswer(option)}
-                sx={{ 
-                  justifyContent: 'flex-start',
-                  py: 1.5,
-                }}
-              >
-                {option}
-              </Button>
-            ))}
-          </Box>
-        );
+        if (question.options) {
+          try {
+            const options = JSON.parse(question.options);
+            return (
+              <Box sx={{ mt: 3 }}>
+                <Stack spacing={2}>
+                  {options.map((option: string, index: number) => (
+                    <Paper
+                      key={index}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        border: '2px solid',
+                        borderColor: pendingAnswer === option ? 'primary.main' : 'grey.200',
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        backgroundColor: pendingAnswer === option ? 'primary.50' : 'transparent',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          backgroundColor: 'primary.25',
+                        },
+                      }}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: '1.1rem',
+                          fontWeight: pendingAnswer === option ? 600 : 500,
+                          color: pendingAnswer === option ? 'primary.main' : 'text.primary',
+                        }}
+                      >
+                        {option}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            );
+          } catch (e) {
+            return null;
+          }
+        }
+        break;
 
       case 'number':
         return (
           <Box sx={{ mt: 3 }}>
-            <input
+            <TextField
               type="number"
-              placeholder="Entrez votre réponse"
+              label="Votre réponse"
               value={pendingAnswer || ''}
-              onChange={(e) => setPendingAnswer(Number(e.target.value) || null)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '16px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                outline: 'none'
+              onChange={(e) => handleAnswer(e.target.value)}
+              fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                },
               }}
+              placeholder="Entrez un nombre"
             />
           </Box>
         );
 
       default:
-        return null;
+        return (
+          <Box sx={{ mt: 3 }}>
+            <TextField
+              label="Votre réponse"
+              value={pendingAnswer || ''}
+              onChange={(e) => handleAnswer(e.target.value)}
+              fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                },
+              }}
+              placeholder="Tapez votre réponse"
+            />
+          </Box>
+        );
     }
   };
 
@@ -286,164 +411,230 @@ const SmartEligibilityForm: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <CircularProgress size={60} />
-          <Typography variant="h6">Analyse en cours...</Typography>
-        </Box>
+      <Container maxWidth="md" sx={{ py: { xs: 3, md: 6 } }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 4, md: 6 },
+            textAlign: 'center',
+            border: '1px solid',
+            borderColor: 'grey.200',
+            borderRadius: 3,
+          }}
+        >
+          <Box sx={{ mb: 3 }}>
+            <CircularProgress 
+              size={60} 
+              thickness={4}
+              sx={{
+                color: 'primary.main',
+                '& .MuiCircularProgress-circle': {
+                  strokeLinecap: 'round',
+                },
+              }}
+            />
+          </Box>
+          <Typography variant="h6" color="text.secondary">
+            Préparation du questionnaire...
+          </Typography>
+        </Paper>
       </Container>
     );
   }
 
   if (isComplete) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Card elevation={3}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" gutterBottom color="primary" sx={{ textAlign: 'center' }}>
-              🎉 Vos résultats
-            </Typography>
-            
-            {finalResults.length > 0 ? (
-              <>
-                <Alert severity="success" sx={{ mb: 3 }}>
-                  Félicitations ! Vous êtes éligible à {finalResults.length} aide(s) immobilière(s).
-                </Alert>
-                
-                {finalResults.map((aid) => (
-                  <Card key={aid.id} variant="outlined" sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                        <Typography variant="h6" color="primary">
-                          {aid.title}
-                        </Typography>
-                        <Chip label={aid.region} color="secondary" size="small" />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        {aid.description}
-                      </Typography>
-                      
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                        {aid.link && (
-                          <Button 
-                            variant="contained" 
-                            href={aid.link} 
-                            target="_blank"
-                            size="small"
-                          >
-                            Site officiel
-                          </Button>
-                        )}
-                        <Button 
-                          variant="outlined" 
-                          onClick={() => openEmailClient(`Informations sur l'aide: ${aid.title}`)}
-                          size="small"
-                        >
-                          📧 Contacter par email
-                        </Button>
-                        <Button 
-                          variant="outlined" 
-                          startIcon={<ContentCopy />}
-                          onClick={copyEmailToClipboard}
-                          size="small"
-                        >
-                          Copier email
-                        </Button>
-                      </Box>
-                      
-                      <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        💡 Email de contact : nastassia_dmrtds@outlook.com
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {/* Section contact globale */}
-                <Alert severity="info" sx={{ mt: 3 }}>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Besoin d'aide personnalisée ?</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    Notre équipe peut vous accompagner dans vos démarches pour maximiser vos chances d'obtenir ces aides.
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <Button 
-                      variant="contained" 
-                      color="info"
-                      onClick={() => openEmailClient('Demande d\'accompagnement - Aides immobilières')}
-                      size="small"
-                    >
-                      📧 Contacter un conseiller
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      color="info"
-                      startIcon={<ContentCopy />}
-                      onClick={copyEmailToClipboard}
-                      size="small"
-                    >
-                      Copier email
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      color="info"
-                      href="tel:+3249719908"
-                      size="small"
-                    >
-                      📞 +32 4 97 19 90 08
-                    </Button>
-                  </Box>
-                </Alert>
-              </>
-            ) : (
-              <>
-                <Alert severity="info" sx={{ mb: 3 }}>
-                  Désolé, aucune aide ne correspond à votre situation actuelle selon nos critères.
-                </Alert>
-                
-                <Alert severity="warning" sx={{ mb: 3 }}>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Ne perdez pas espoir !</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    Il existe peut-être d'autres aides spécifiques ou des conditions particulières que nous n'avons pas couvertes. 
-                    Notre équipe peut analyser votre situation en détail.
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <Button 
-                      variant="contained" 
-                      color="warning"
-                      onClick={() => openEmailClient('Analyse personnalisée - Aides immobilières')}
-                      size="small"
-                    >
-                      📧 Demander une analyse personnalisée
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      color="warning"
-                      startIcon={<ContentCopy />}
-                      onClick={copyEmailToClipboard}
-                      size="small"
-                    >
-                      Copier email
-                    </Button>
-                  </Box>
-                </Alert>
-              </>
-            )}
-            
-            <Button 
-              variant="outlined" 
-              onClick={startQuestionnaire}
-              fullWidth
-              sx={{ mt: 2 }}
-            >
-              Recommencer le questionnaire
-            </Button>
-          </CardContent>
-        </Card>
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 } }}>
+        <Fade in timeout={800}>
+          <Box>
+            {/* Success Header */}
+            <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
+              <Box
+                sx={{
+                  width: { xs: 80, md: 100 },
+                  height: { xs: 80, md: 100 },
+                  borderRadius: '50%',
+                  backgroundColor: finalResults.length > 0 ? 'success.100' : 'warning.100',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 3,
+                }}
+              >
+                <CheckIcon 
+                  sx={{ 
+                    fontSize: { xs: 40, md: 50 }, 
+                    color: finalResults.length > 0 ? 'success.main' : 'warning.main'
+                  }} 
+                />
+              </Box>
+              
+              <Typography 
+                variant="h2" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: 700,
+                  mb: 3,
+                  fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
+                }}
+              >
+                {finalResults.length > 0 
+                  ? `${finalResults.length} aide${finalResults.length > 1 ? 's trouvée' : ' trouvée'}${finalResults.length > 1 ? 's' : ''} !`
+                  : 'Aucune aide correspondante'
+                }
+              </Typography>
+            </Box>
 
-        {/* Snackbar pour confirmer la copie */}
+            {/* Résultats */}
+            {finalResults.length > 0 ? (
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { 
+                  xs: '1fr', 
+                  md: 'repeat(auto-fit, minmax(350px, 1fr))' 
+                },
+                gap: 3,
+                mb: 4
+              }}>
+                {finalResults.map((aid) => (
+                  <Paper
+                    key={aid.id}
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      border: '1px solid',
+                      borderColor: 'success.200',
+                      borderRadius: 3,
+                      background: 'linear-gradient(145deg, #FFFFFF 0%, #F0FDF4 100%)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 4,
+                        background: 'linear-gradient(90deg, #059669 0%, #10B981 100%)',
+                      },
+                    }}
+                  >
+                    <Typography 
+                      variant="h5" 
+                      gutterBottom
+                      sx={{ 
+                        fontWeight: 600,
+                        color: 'success.dark',
+                        mb: 2,
+                      }}
+                    >
+                      {aid.title}
+                    </Typography>
+                    
+                    <Typography 
+                      variant="body1" 
+                      color="text.secondary" 
+                      paragraph
+                      sx={{ lineHeight: 1.6 }}
+                    >
+                      {aid.description}
+                    </Typography>
+                    
+                    <Box sx={{ mb: 3 }}>
+                      <Chip
+                        label={aid.region}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'primary.100',
+                          color: 'primary.dark',
+                          fontWeight: 500,
+                        }}
+                      />
+                    </Box>
+                    
+                    <Button
+                      variant="contained"
+                      href={aid.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      fullWidth
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 600,
+                      }}
+                    >
+                      En savoir plus
+                    </Button>
+                  </Paper>
+                ))}
+              </Box>
+            ) : (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 4, md: 6 },
+                  textAlign: 'center',
+                  border: '1px solid',
+                  borderColor: 'warning.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(145deg, #FFFFFF 0%, #FFFBEB 100%)',
+                  mb: 4,
+                }}
+              >
+                <Typography variant="h5" gutterBottom color="warning.dark">
+                  Aucune aide trouvée pour votre profil
+                </Typography>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  Malheureusement, nous n'avons pas trouvé d'aides correspondant exactement à votre situation.
+                </Typography>
+              </Paper>
+            )}
+
+            {/* Contact et actions */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+                Besoin d'aide supplémentaire ?
+              </Typography>
+              
+              <Stack 
+                direction={{ xs: 'column', sm: 'row' }} 
+                spacing={2} 
+                justifyContent="center"
+                sx={{ mb: 4 }}
+              >
+                <Button
+                  variant="outlined"
+                  startIcon={<EmailIcon />}
+                  onClick={() => openEmailClient('Demande d\'information - ImmoAide')}
+                  sx={{ minWidth: 200 }}
+                >
+                  Nous contacter
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  startIcon={<CopyIcon />}
+                  onClick={copyEmailToClipboard}
+                  sx={{ minWidth: 200 }}
+                >
+                  Copier l'email
+                </Button>
+                
+                <Button
+                  variant="contained"
+                  startIcon={<RefreshIcon />}
+                  onClick={startQuestionnaire}
+                  sx={{ minWidth: 200 }}
+                >
+                  Recommencer
+                </Button>
+              </Stack>
+            </Box>
+          </Box>
+        </Fade>
+
         <Snackbar
           open={showCopySnackbar}
           autoHideDuration={3000}
@@ -456,29 +647,80 @@ const SmartEligibilityForm: React.FC = () => {
 
   if (!currentStep) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Card elevation={3}>
-          <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h4" gutterBottom color="primary">
-              🏠 Bienvenue sur Immo Aide
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-              Découvrez les aides immobilières qui vous correspondent
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 4 }}>
-              Notre questionnaire intelligent vous pose uniquement les questions nécessaires 
-              pour identifier les aides disponibles selon votre situation.
-            </Typography>
-            <Button 
-              variant="contained" 
-              size="large"
-              onClick={startQuestionnaire}
-              sx={{ px: 4, py: 1.5 }}
-            >
-              Commencer le questionnaire
-            </Button>
-          </CardContent>
-        </Card>
+      <Container maxWidth="md" sx={{ py: { xs: 3, md: 6 } }}>
+        <Fade in timeout={800}>
+          <Box sx={{ textAlign: 'center' }}>
+            {/* Hero Section */}
+            <Box sx={{ mb: { xs: 4, md: 6 } }}>
+              <Box
+                sx={{
+                  width: { xs: 100, md: 120 },
+                  height: { xs: 100, md: 120 },
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 4,
+                  boxShadow: '0 12px 40px rgba(15, 118, 110, 0.3)',
+                }}
+              >
+                <QuizIcon sx={{ fontSize: { xs: 50, md: 60 }, color: 'white' }} />
+              </Box>
+              
+              <Typography 
+                variant="h1" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: 700,
+                  mb: 3,
+                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                  background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Trouvez vos aides au logement
+              </Typography>
+              
+              <Typography 
+                variant="h6" 
+                color="text.secondary" 
+                sx={{ 
+                  maxWidth: 600, 
+                  mx: 'auto',
+                  fontSize: { xs: '1.1rem', md: '1.25rem' },
+                  lineHeight: 1.6,
+                  mb: 4,
+                }}
+              >
+                Répondez à quelques questions pour découvrir toutes les aides et subventions 
+                auxquelles vous avez droit dans votre région.
+              </Typography>
+
+              <Button
+                variant="contained"
+                size="large"
+                onClick={startQuestionnaire}
+                sx={{
+                  px: 4,
+                  py: 2,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderRadius: 3,
+                  boxShadow: '0 8px 25px rgba(15, 118, 110, 0.3)',
+                  '&:hover': {
+                    boxShadow: '0 12px 35px rgba(15, 118, 110, 0.4)',
+                  },
+                }}
+              >
+                Commencer le questionnaire
+              </Button>
+            </Box>
+          </Box>
+        </Fade>
       </Container>
     );
   }
@@ -486,44 +728,95 @@ const SmartEligibilityForm: React.FC = () => {
   const progress = totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0;
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Card elevation={3}>
-        <CardContent sx={{ p: 4 }}>
-          {/* Barre de progression */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Question {currentQuestionIndex} sur ~{totalQuestions}
+    <Container maxWidth="md" sx={{ py: { xs: 3, md: 6 } }}>
+      <Fade in timeout={600}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 6 },
+            border: '1px solid',
+            borderColor: 'grey.200',
+            borderRadius: 3,
+            background: 'linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)',
+          }}
+        >
+          {/* Progress Bar */}
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mb: 2 
+            }}>
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                Question {currentQuestionIndex + 1} sur {totalQuestions}
               </Typography>
-              <Chip 
-                label={`${currentStep.remainingAids} aide(s) possible(s)`} 
-                color="primary" 
-                size="small" 
-              />
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {Math.round(progress)}%
+              </Typography>
             </Box>
-            <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4 }} />
+            <LinearProgress 
+              variant="determinate" 
+              value={progress}
+              sx={{ 
+                height: 8, 
+                borderRadius: 4,
+                backgroundColor: 'grey.200',
+              }}
+            />
           </Box>
 
           {/* Question */}
-          <Typography variant="h5" sx={{ mb: 1, fontWeight: 'medium' }}>
+          <Typography 
+            variant="h4" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 600,
+              mb: 3,
+              fontSize: { xs: '1.5rem', md: '1.75rem' },
+              lineHeight: 1.3,
+            }}
+          >
             {currentStep.question.text}
           </Typography>
 
-          {/* Input de la question */}
+          {/* Aide restante */}
+          <Alert 
+            severity="info" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              '& .MuiAlert-message': {
+                fontWeight: 500,
+              },
+            }}
+          >
+            {currentStep.remainingAids} aide{currentStep.remainingAids > 1 ? 's' : ''} potentielle{currentStep.remainingAids > 1 ? 's' : ''} pour votre profil
+          </Alert>
+
+          {/* Input */}
           {renderQuestionInput()}
 
-          {/* Boutons de navigation */}
+          {/* Navigation */}
           <Stack 
             direction="row" 
             spacing={2} 
-            sx={{ mt: 4, justifyContent: 'space-between' }}
+            sx={{ 
+              mt: 4, 
+              justifyContent: 'space-between',
+              flexDirection: { xs: 'column-reverse', sm: 'row' },
+              gap: { xs: 2, sm: 2 }
+            }}
           >
             <Button
               variant="outlined"
               startIcon={<ArrowBack />}
               onClick={handlePrevious}
               disabled={questionHistory.length === 0}
-              sx={{ minWidth: 120 }}
+              sx={{ 
+                minWidth: { xs: '100%', sm: 140 },
+                py: 1.5,
+              }}
             >
               Précédent
             </Button>
@@ -533,18 +826,17 @@ const SmartEligibilityForm: React.FC = () => {
               endIcon={<ArrowForward />}
               onClick={handleNext}
               disabled={isNextDisabled()}
-              sx={{ minWidth: 120 }}
+              sx={{ 
+                minWidth: { xs: '100%', sm: 140 },
+                py: 1.5,
+                fontWeight: 600,
+              }}
             >
               Suivant
             </Button>
           </Stack>
-
-          {/* Instructions */}
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-            Sélectionnez votre réponse puis cliquez sur "Suivant"
-          </Typography>
-        </CardContent>
-      </Card>
+        </Paper>
+      </Fade>
     </Container>
   );
 };

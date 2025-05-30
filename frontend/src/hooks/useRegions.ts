@@ -16,7 +16,6 @@ export const useRegions = () => {
   useEffect(() => {
     const fetchRegions = async () => {
       if (!isAuthenticated || !token) {
-        console.log('Non authentifié, pas de chargement des régions');
         setRegions([]);
         return;
       }
@@ -32,7 +31,6 @@ export const useRegions = () => {
           }
         });
         
-        console.log('Réponse aids:', response.data);
         
         // Extraire les régions uniques des aides
         const aids = Array.isArray(response.data) ? response.data : [];
@@ -43,7 +41,6 @@ export const useRegions = () => {
             name: region
           }));
         
-        console.log('Régions extraites:', uniqueRegions);
         setRegions(uniqueRegions);
       } catch (error) {
         console.error('Erreur lors du chargement des régions:', error);
