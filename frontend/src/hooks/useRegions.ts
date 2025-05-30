@@ -25,7 +25,8 @@ export const useRegions = () => {
       setError(null);
       
       try {
-        const response = await axios.get('http://localhost:3001/aids', {
+        const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+        const response = await axios.get(`${apiBaseUrl}/aids`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
