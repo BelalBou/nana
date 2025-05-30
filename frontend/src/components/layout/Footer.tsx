@@ -67,18 +67,18 @@ const Footer: React.FC = () => {
   const contactInfo = [
     {
       icon: <EmailIcon />,
-      text: 'contact@immoaide.fr',
-      href: 'mailto:contact@immoaide.fr',
-      email: 'contact@immoaide.fr',
+      text: 'nastassia_dmrtds@outlook.com',
+      href: 'mailto:nastassia_dmrtds@outlook.com',
+      email: 'nastassia_dmrtds@outlook.com',
     },
     {
       icon: <PhoneIcon />,
-      text: '01 23 45 67 89',
-      href: 'tel:+33123456789',
+      text: '+32 4 97 19 90 08',
+      href: 'tel:+32497199008',
     },
     {
       icon: <LocationIcon />,
-      text: 'Paris, France',
+      text: 'Verviers, Belgique',
       href: '#',
     },
   ];
