@@ -10,9 +10,10 @@ import {
   Chip,
   Alert,
   Container,
-  Stack
+  Stack,
+  Snackbar
 } from '@mui/material';
-import { ArrowBack, ArrowForward } from '@mui/icons-material';
+import { ArrowBack, ArrowForward, ContentCopy } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Question {
@@ -59,8 +60,30 @@ const SmartEligibilityForm: React.FC = () => {
   const [questionHistory, setQuestionHistory] = useState<QuestionStep[]>([]);
   const [answerHistory, setAnswerHistory] = useState<Record<string, any>[]>([]);
   const [pendingAnswer, setPendingAnswer] = useState<any>(null);
+  const [showCopySnackbar, setShowCopySnackbar] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+
+  // Fonction pour copier l'email dans le presse-papier
+  const copyEmailToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText('nastassia_dmrtds@outlook.com');
+      setShowCopySnackbar(true);
+    } catch (err) {
+      console.error('Erreur lors de la copie:', err);
+    }
+  };
+
+  // Fonction pour ouvrir le client email avec un mailto simple
+  const openEmailClient = (subject?: string) => {
+    const email = 'nastassia_dmrtds@outlook.com';
+    const mailtoUrl = subject 
+      ? `mailto:${email}?subject=${encodeURIComponent(subject)}`
+      : `mailto:${email}`;
+    
+    // Ouvrir dans une nouvelle fenêtre pour éviter les problèmes de navigation
+    window.open(mailtoUrl, '_self');
+  };
 
   const fetchNextQuestion = async () => {
     try {
@@ -313,15 +336,23 @@ const SmartEligibilityForm: React.FC = () => {
                         )}
                         <Button 
                           variant="outlined" 
-                          href={`mailto:nastassia_dmrtds@outlook.com?subject=Demande d'informations - Aide immobilière&body=Bonjour, je souhaiterais avoir plus d'informations concernant l'aide : ${aid.title}`}
+                          onClick={() => openEmailClient(`Informations sur l'aide: ${aid.title}`)}
                           size="small"
                         >
-                          Contacter par email
+                          📧 Contacter par email
+                        </Button>
+                        <Button 
+                          variant="outlined" 
+                          startIcon={<ContentCopy />}
+                          onClick={copyEmailToClipboard}
+                          size="small"
+                        >
+                          Copier email
                         </Button>
                       </Box>
                       
                       <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        💡 Pour plus d'informations personnalisées, contactez nastassia_dmrtds@outlook.com
+                        💡 Email de contact : nastassia_dmrtds@outlook.com
                       </Typography>
                     </CardContent>
                   </Card>
@@ -339,7 +370,7 @@ const SmartEligibilityForm: React.FC = () => {
                     <Button 
                       variant="contained" 
                       color="info"
-                      href="mailto:nastassia_dmrtds@outlook.com?subject=Demande d'accompagnement - Aides immobilières&body=Bonjour, je souhaiterais être accompagné(e) dans mes démarches pour obtenir les aides immobilières suivantes :"
+                      onClick={() => openEmailClient('Demande d\'accompagnement - Aides immobilières')}
                       size="small"
                     >
                       📧 Contacter un conseiller
@@ -347,7 +378,16 @@ const SmartEligibilityForm: React.FC = () => {
                     <Button 
                       variant="outlined" 
                       color="info"
-                      href="tel:+33123456789"
+                      startIcon={<ContentCopy />}
+                      onClick={copyEmailToClipboard}
+                      size="small"
+                    >
+                      Copier email
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      color="info"
+                      href="tel:+3249719908"
                       size="small"
                     >
                       📞 +32 4 97 19 90 08
@@ -369,14 +409,25 @@ const SmartEligibilityForm: React.FC = () => {
                     Il existe peut-être d'autres aides spécifiques ou des conditions particulières que nous n'avons pas couvertes. 
                     Notre équipe peut analyser votre situation en détail.
                   </Typography>
-                  <Button 
-                    variant="contained" 
-                    color="warning"
-                    href="mailto:nastassia_dmrtds@outlook.com?subject=Analyse personnalisée - Aides immobilières&body=Bonjour, aucune aide ne correspond à ma situation selon le questionnaire. Pourriez-vous analyser mon dossier personnellement ?"
-                    size="small"
-                  >
-                    📧 Demander une analyse personnalisée
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button 
+                      variant="contained" 
+                      color="warning"
+                      onClick={() => openEmailClient('Analyse personnalisée - Aides immobilières')}
+                      size="small"
+                    >
+                      📧 Demander une analyse personnalisée
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      color="warning"
+                      startIcon={<ContentCopy />}
+                      onClick={copyEmailToClipboard}
+                      size="small"
+                    >
+                      Copier email
+                    </Button>
+                  </Box>
                 </Alert>
               </>
             )}
@@ -391,6 +442,14 @@ const SmartEligibilityForm: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Snackbar pour confirmer la copie */}
+        <Snackbar
+          open={showCopySnackbar}
+          autoHideDuration={3000}
+          onClose={() => setShowCopySnackbar(false)}
+          message="Email copié dans le presse-papier !"
+        />
       </Container>
     );
   }
