@@ -3,7 +3,7 @@ import * as Minio from 'minio';
 const minioClient = new Minio.Client({
   endPoint: process.env.MINIO_ENDPOINT || 's3.dayz-code.com',
   port: parseInt(process.env.MINIO_PORT || '443'),
-  useSSL: process.env.MINIO_USE_SSL === 'true',
+  useSSL: process.env.MINIO_USE_SSL !== 'false', // true par défaut pour HTTPS
   accessKey: process.env.MINIO_ACCESS_KEY || 'one',
   secretKey: process.env.MINIO_SECRET_KEY || 'skylineGTR48',
 });

@@ -8,7 +8,8 @@ import {
   UseGuards,
   BadRequestException,
   HttpStatus,
-  HttpCode
+  HttpCode,
+  Get
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
@@ -20,6 +21,15 @@ import { memoryStorage } from 'multer';
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
+  @Get('test')
+  testUpload() {
+    return { 
+      success: true, 
+      message: 'Upload module is working',
+      timestamp: new Date().toISOString()
+    };
+  }
+
   @Post('image')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -28,6 +38,7 @@ export class UploadController {
         fileSize: 5 * 1024 * 1024, // 5MB max
       },
       fileFilter: (req, file, cb) => {
+        console.log('📁 Fichier reçu:', file.originalname, file.mimetype);
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);
         } else {
@@ -37,22 +48,28 @@ export class UploadController {
     })
   )
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    console.log('🔄 Upload demandé, fichier reçu:', !!file);
+    
     if (!file) {
       throw new BadRequestException('Aucun fichier fourni');
     }
 
     try {
+      console.log('⬆️ Début upload vers MinIO...');
       const result = await this.uploadService.uploadImage(file);
+      console.log('✅ Upload réussi:', result.imageUrl);
+      
       return {
         success: true,
         ...result,
       };
     } catch (error) {
+      console.error('❌ Erreur upload:', error);
       throw new BadRequestException(error.message);
     }
   }
 
-  @Delete('image/:fileName')
+  @Delete('image/:fileName(*)')
   @HttpCode(HttpStatus.OK)
   async deleteImage(@Param('fileName') fileName: string) {
     try {
