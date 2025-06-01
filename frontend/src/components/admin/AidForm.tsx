@@ -58,6 +58,7 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
@@ -74,13 +75,63 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
     }
   }, [aid]);
 
+  // Fonction pour nettoyer le nom de fichier
+  const sanitizeFileName = (fileName: string): string => {
+    return fileName
+      .normalize('NFD') // Décompose les caractères accentués
+      .replace(/[\u0300-\u036f]/g, '') // Supprime les diacritiques
+      .replace(/[^a-zA-Z0-9.-]/g, '_') // Remplace les caractères spéciaux par _
+      .replace(/_+/g, '_') // Remplace les _ multiples par un seul
+      .toLowerCase();
+  };
+
+  // Fonction pour compresser l'image
+  const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculer les nouvelles dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Dessiner l'image redimensionnée
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Convertir en blob puis en fichier avec nom nettoyé
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const cleanFileName = sanitizeFileName(file.name);
+            const compressedFile = new File([blob], cleanFileName, {
+              type: file.type,
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            resolve(file);
+          }
+        }, file.type, quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !token) return;
 
-    // Vérifications
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Le fichier ne doit pas dépasser 5MB');
+    // Vérifications initiales
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Le fichier ne doit pas dépasser 10MB');
       return;
     }
 
@@ -91,30 +142,89 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
 
     setUploading(true);
     setUploadError(null);
+    setUploadProgress(0);
 
     try {
-      const uploadFormData = new FormData();
-      uploadFormData.append('image', file);
+      // Nettoyer le nom de fichier dès le début
+      const cleanFileName = sanitizeFileName(file.name);
+      let fileToUpload = new File([file], cleanFileName, {
+        type: file.type,
+        lastModified: file.lastModified,
+      });
 
-      const response = await axios.post<UploadResponse>(`${API_BASE_URL}/upload/image`, uploadFormData, {
+      // Compresser TOUJOURS les images > 1MB pour éviter les problèmes MinIO
+      const shouldCompress = file.size > 1024 * 1024; // 1MB
+      
+      if (shouldCompress) {
+        setUploadProgress(10);
+        
+        // Compression plus agressive pour les gros fichiers
+        const maxWidth = file.size > 3 * 1024 * 1024 ? 800 : 1200; // 800px si > 3MB, sinon 1200px
+        const quality = file.size > 3 * 1024 * 1024 ? 0.6 : 0.8; // Qualité réduite si > 3MB
+        
+        fileToUpload = await compressImage(fileToUpload, maxWidth, quality);
+        console.log(`Image compressée: ${file.size} -> ${fileToUpload.size} bytes`);
+        console.log(`Compression: ${maxWidth}px, qualité: ${quality}`);
+      } else {
+        console.log(`Image conservée sans compression: ${fileToUpload.size} bytes`);
+      }
+
+      // Vérification finale de la taille après compression
+      if (fileToUpload.size > 5 * 1024 * 1024) { // 5MB max après compression
+        setUploadError('L\'image est encore trop lourde après compression. Essayez avec une image plus petite.');
+        return;
+      }
+
+      setUploadProgress(20);
+
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', fileToUpload);
+
+      const config = {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          // Pas de Content-Type pour laisser le navigateur gérer
         },
-      });
+        timeout: 60000,
+        onUploadProgress: (progressEvent: { loaded: number; total?: number }) => {
+          if (progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 80) / progressEvent.total) + 20;
+            setUploadProgress(progress);
+          }
+        },
+      };
+
+      const response = await axios.post<UploadResponse>(`${API_BASE_URL}/upload/image`, uploadFormData, config);
+
+      setUploadProgress(100);
 
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, response.data.imageUrl],
       }));
     } catch (error: any) {
-      console.error('Erreur upload:', error);
-      setUploadError(
-        error.response?.data?.message || 
-        'Erreur lors de l\'upload de l\'image'
-      );
+      console.error('Erreur upload complète:', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      
+      let errorMessage = 'Erreur lors de l\'upload de l\'image';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Timeout: L\'upload a pris trop de temps. Essayez avec une image plus petite.';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 
+                      error.response?.data?.error || 
+                      'Requête invalide. Vérifiez le format du fichier.';
+      } else if (error.response?.status === 413) {
+        errorMessage = 'Fichier trop volumineux pour le serveur.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setUploadError(`${errorMessage} (Status: ${error.response?.status || 'Unknown'})`);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
       // Reset input
       event.target.value = '';
     }
@@ -254,7 +364,7 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
                 py: 1.5,
               }}
             >
-              {uploading ? 'Upload en cours...' : 'Ajouter une image'}
+              {uploading ? `Upload en cours... ${uploadProgress}%` : 'Ajouter une image'}
               <input
                 type="file"
                 accept="image/*"
@@ -263,8 +373,28 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
               />
             </Button>
             
+            {uploading && uploadProgress > 0 && (
+              <Box sx={{ width: '100%', mt: 1 }}>
+                <Box sx={{ 
+                  width: '100%', 
+                  backgroundColor: 'grey.200', 
+                  borderRadius: 1,
+                  height: 4,
+                  overflow: 'hidden'
+                }}>
+                  <Box sx={{
+                    width: `${uploadProgress}%`,
+                    height: '100%',
+                    backgroundColor: 'primary.main',
+                    transition: 'width 0.3s ease-in-out'
+                  }} />
+                </Box>
+              </Box>
+            )}
+            
             <Typography variant="body2" color="text.secondary">
-              Formats supportés: JPG, PNG, GIF • Taille max: 5MB
+              Formats supportés: JPG, PNG, GIF • Taille max: 10MB<br/>
+              <em>Les images lourdes seront automatiquement compressées</em>
             </Typography>
           </Paper>
 
