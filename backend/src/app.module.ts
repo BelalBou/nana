@@ -6,9 +6,10 @@ import { ConditionModule } from './condition/condition.module';
 import { EligibilityModule } from './eligibility/eligibility.module';
 import { AuthModule } from './auth/auth.module';
 import { QuestionModule } from './question/question.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
-  imports: [AidModule, ConditionModule, EligibilityModule, AuthModule, QuestionModule],
+  imports: [AidModule, ConditionModule, EligibilityModule, AuthModule, QuestionModule, UploadModule],
   controllers: [AppController],
   providers: [AppService],
 })

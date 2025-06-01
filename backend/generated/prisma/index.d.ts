@@ -3402,6 +3402,7 @@ export namespace Prisma {
     region: number
     link: number
     active: number
+    images: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3445,6 +3446,7 @@ export namespace Prisma {
     region?: true
     link?: true
     active?: true
+    images?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3543,6 +3545,7 @@ export namespace Prisma {
     region: string
     link: string
     active: boolean
+    images: string[]
     createdAt: Date
     updatedAt: Date
     _count: AidCountAggregateOutputType | null
@@ -3573,6 +3576,7 @@ export namespace Prisma {
     region?: boolean
     link?: boolean
     active?: boolean
+    images?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     conditions?: boolean | Aid$conditionsArgs<ExtArgs>
@@ -3586,6 +3590,7 @@ export namespace Prisma {
     region?: boolean
     link?: boolean
     active?: boolean
+    images?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["aid"]>
@@ -3597,6 +3602,7 @@ export namespace Prisma {
     region?: boolean
     link?: boolean
     active?: boolean
+    images?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["aid"]>
@@ -3608,11 +3614,12 @@ export namespace Prisma {
     region?: boolean
     link?: boolean
     active?: boolean
+    images?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AidOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "region" | "link" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["aid"]>
+  export type AidOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "region" | "link" | "active" | "images" | "createdAt" | "updatedAt", ExtArgs["result"]["aid"]>
   export type AidInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     conditions?: boolean | Aid$conditionsArgs<ExtArgs>
     _count?: boolean | AidCountOutputTypeDefaultArgs<ExtArgs>
@@ -3632,6 +3639,7 @@ export namespace Prisma {
       region: string
       link: string
       active: boolean
+      images: string[]
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["aid"]>
@@ -4064,6 +4072,7 @@ export namespace Prisma {
     readonly region: FieldRef<"Aid", 'String'>
     readonly link: FieldRef<"Aid", 'String'>
     readonly active: FieldRef<"Aid", 'Boolean'>
+    readonly images: FieldRef<"Aid", 'String[]'>
     readonly createdAt: FieldRef<"Aid", 'DateTime'>
     readonly updatedAt: FieldRef<"Aid", 'DateTime'>
   }
@@ -5674,6 +5683,7 @@ export namespace Prisma {
     region: 'region',
     link: 'link',
     active: 'active',
+    images: 'images',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -5915,6 +5925,7 @@ export namespace Prisma {
     region?: StringFilter<"Aid"> | string
     link?: StringFilter<"Aid"> | string
     active?: BoolFilter<"Aid"> | boolean
+    images?: StringNullableListFilter<"Aid">
     createdAt?: DateTimeFilter<"Aid"> | Date | string
     updatedAt?: DateTimeFilter<"Aid"> | Date | string
     conditions?: ConditionListRelationFilter
@@ -5927,6 +5938,7 @@ export namespace Prisma {
     region?: SortOrder
     link?: SortOrder
     active?: SortOrder
+    images?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     conditions?: ConditionOrderByRelationAggregateInput
@@ -5942,6 +5954,7 @@ export namespace Prisma {
     region?: StringFilter<"Aid"> | string
     link?: StringFilter<"Aid"> | string
     active?: BoolFilter<"Aid"> | boolean
+    images?: StringNullableListFilter<"Aid">
     createdAt?: DateTimeFilter<"Aid"> | Date | string
     updatedAt?: DateTimeFilter<"Aid"> | Date | string
     conditions?: ConditionListRelationFilter
@@ -5954,6 +5967,7 @@ export namespace Prisma {
     region?: SortOrder
     link?: SortOrder
     active?: SortOrder
+    images?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: AidCountOrderByAggregateInput
@@ -5973,6 +5987,7 @@ export namespace Prisma {
     region?: StringWithAggregatesFilter<"Aid"> | string
     link?: StringWithAggregatesFilter<"Aid"> | string
     active?: BoolWithAggregatesFilter<"Aid"> | boolean
+    images?: StringNullableListFilter<"Aid">
     createdAt?: DateTimeWithAggregatesFilter<"Aid"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Aid"> | Date | string
   }
@@ -6170,6 +6185,7 @@ export namespace Prisma {
     region: string
     link: string
     active?: boolean
+    images?: AidCreateimagesInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     conditions?: ConditionCreateNestedManyWithoutAidInput
@@ -6182,6 +6198,7 @@ export namespace Prisma {
     region: string
     link: string
     active?: boolean
+    images?: AidCreateimagesInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     conditions?: ConditionUncheckedCreateNestedManyWithoutAidInput
@@ -6193,6 +6210,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     link?: StringFieldUpdateOperationsInput | string
     active?: BoolFieldUpdateOperationsInput | boolean
+    images?: AidUpdateimagesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     conditions?: ConditionUpdateManyWithoutAidNestedInput
@@ -6205,6 +6223,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     link?: StringFieldUpdateOperationsInput | string
     active?: BoolFieldUpdateOperationsInput | boolean
+    images?: AidUpdateimagesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     conditions?: ConditionUncheckedUpdateManyWithoutAidNestedInput
@@ -6217,6 +6236,7 @@ export namespace Prisma {
     region: string
     link: string
     active?: boolean
+    images?: AidCreateimagesInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -6227,6 +6247,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     link?: StringFieldUpdateOperationsInput | string
     active?: BoolFieldUpdateOperationsInput | boolean
+    images?: AidUpdateimagesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -6238,6 +6259,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     link?: StringFieldUpdateOperationsInput | string
     active?: BoolFieldUpdateOperationsInput | boolean
+    images?: AidUpdateimagesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -6514,6 +6536,14 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type AidCountOrderByAggregateInput = {
     id?: SortOrder
     title?: SortOrder
@@ -6521,6 +6551,7 @@ export namespace Prisma {
     region?: SortOrder
     link?: SortOrder
     active?: SortOrder
+    images?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -6677,6 +6708,10 @@ export namespace Prisma {
     deleteMany?: ConditionScalarWhereInput | ConditionScalarWhereInput[]
   }
 
+  export type AidCreateimagesInput = {
+    set: string[]
+  }
+
   export type ConditionCreateNestedManyWithoutAidInput = {
     create?: XOR<ConditionCreateWithoutAidInput, ConditionUncheckedCreateWithoutAidInput> | ConditionCreateWithoutAidInput[] | ConditionUncheckedCreateWithoutAidInput[]
     connectOrCreate?: ConditionCreateOrConnectWithoutAidInput | ConditionCreateOrConnectWithoutAidInput[]
@@ -6693,6 +6728,11 @@ export namespace Prisma {
 
   export type BoolFieldUpdateOperationsInput = {
     set?: boolean
+  }
+
+  export type AidUpdateimagesInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type ConditionUpdateManyWithoutAidNestedInput = {
@@ -7005,6 +7045,7 @@ export namespace Prisma {
     region: string
     link: string
     active?: boolean
+    images?: AidCreateimagesInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -7016,6 +7057,7 @@ export namespace Prisma {
     region: string
     link: string
     active?: boolean
+    images?: AidCreateimagesInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -7068,6 +7110,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     link?: StringFieldUpdateOperationsInput | string
     active?: BoolFieldUpdateOperationsInput | boolean
+    images?: AidUpdateimagesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7079,6 +7122,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     link?: StringFieldUpdateOperationsInput | string
     active?: BoolFieldUpdateOperationsInput | boolean
+    images?: AidUpdateimagesInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

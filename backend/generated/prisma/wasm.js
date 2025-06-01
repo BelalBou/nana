@@ -144,6 +144,7 @@ exports.Prisma.AidScalarFieldEnum = {
   region: 'region',
   link: 'link',
   active: 'active',
+  images: 'images',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
