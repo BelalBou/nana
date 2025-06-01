@@ -2,20 +2,23 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  IconButton,
+  DialogActions,
   Box,
   Typography,
+  IconButton,
+  Button,
+  Card,
+  CardMedia,
+  Stack,
+  Chip,
   useTheme,
   useMediaQuery,
-  Fade,
-  Chip,
-  Button,
 } from '@mui/material';
 import {
   Close as CloseIcon,
-  ArrowBackIos as ArrowBackIcon,
-  ArrowForwardIos as ArrowForwardIcon,
-  OpenInNew as OpenInNewIcon,
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
+  Launch as LaunchIcon,
 } from '@mui/icons-material';
 
 interface ImageGalleryModalProps {
@@ -23,10 +26,9 @@ interface ImageGalleryModalProps {
   onClose: () => void;
   images: string[];
   title: string;
-  description?: string;
-  region?: string;
+  description: string;
+  region: string;
   link?: string;
-  initialIndex?: number;
 }
 
 const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
@@ -37,278 +39,249 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
   description,
   region,
   link,
-  initialIndex = 0,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  const handlePreviousImage = () => {
+    setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
   };
 
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  const handleNextImage = () => {
+    setCurrentImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'ArrowLeft') {
-      goToPrevious();
-    } else if (event.key === 'ArrowRight') {
-      goToNext();
-    } else if (event.key === 'Escape') {
-      onClose();
-    }
+  const handleThumbnailClick = (index: number) => {
+    setCurrentImageIndex(index);
   };
 
   React.useEffect(() => {
-    setCurrentIndex(initialIndex);
-  }, [initialIndex, open]);
-
-  if (images.length === 0) return null;
+    setCurrentImageIndex(0);
+  }, [open]);
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth={false}
+      maxWidth="lg"
       fullWidth
       fullScreen={isMobile}
-      onKeyDown={handleKeyDown}
       sx={{
         '& .MuiDialog-paper': {
-          backgroundColor: 'rgba(0, 0, 0, 0.95)',
-          margin: isMobile ? 0 : 2,
-          borderRadius: isMobile ? 0 : 2,
-          maxHeight: '95vh',
+          borderRadius: isMobile ? 0 : 3,
+          maxHeight: isMobile ? '100vh' : '90vh',
         },
       }}
     >
-      <DialogContent
+      {/* Header */}
+      <Box
         sx={{
-          p: 0,
-          position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
-          minHeight: isMobile ? '100vh' : '80vh',
-          backgroundColor: 'black',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          p: 2,
+          borderBottom: '1px solid',
+          borderColor: 'grey.200',
         }}
       >
-        {/* Header avec infos */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)',
-            zIndex: 10,
-            p: 3,
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Box sx={{ flex: 1, mr: 2 }}>
-              <Typography variant="h5" color="white" sx={{ fontWeight: 600, mb: 1 }}>
-                {title}
-              </Typography>
-              
-              {description && (
-                <Typography variant="body2" color="grey.300" sx={{ mb: 2, maxWidth: '70%' }}>
-                  {description}
-                </Typography>
-              )}
-              
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                {region && (
-                  <Chip
-                    label={region}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(20, 184, 166, 0.2)',
-                      color: '#14B8A6',
-                      border: '1px solid rgba(20, 184, 166, 0.3)',
-                    }}
-                  />
-                )}
-                
-                {images.length > 1 && (
-                  <Chip
-                    label={`${images.length} images`}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      color: 'white',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                  />
-                )}
-              </Box>
-            </Box>
-            
-            <IconButton 
-              onClick={onClose} 
-              sx={{ 
-                color: 'white',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                },
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          {title}
+        </Typography>
+        <IconButton onClick={onClose} size="small">
+          <CloseIcon />
+        </IconButton>
+      </Box>
 
-        {/* Navigation Arrows */}
-        {images.length > 1 && (
-          <>
-            <IconButton
-              onClick={goToPrevious}
-              sx={{
-                position: 'absolute',
-                left: 16,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'white',
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                },
-                zIndex: 10,
-                width: 48,
-                height: 48,
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            
-            <IconButton
-              onClick={goToNext}
-              sx={{
-                position: 'absolute',
-                right: 16,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'white',
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                },
-                zIndex: 10,
-                width: 48,
-                height: 48,
-              }}
-            >
-              <ArrowForwardIcon />
-            </IconButton>
-          </>
-        )}
-
-        {/* Main Image */}
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: { xs: 2, md: 4 },
-            pt: { xs: 12, md: 16 },
-            pb: { xs: 12, md: 8 },
-          }}
-        >
-          <Fade in key={currentIndex} timeout={300}>
+      <DialogContent sx={{ p: 0 }}>
+        {images.length > 0 ? (
+          <Box>
+            {/* Image principale */}
             <Box
-              component="img"
-              src={images[currentIndex]}
-              alt={`${title} - Image ${currentIndex + 1}`}
               sx={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                userSelect: 'none',
-                borderRadius: 2,
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                position: 'relative',
+                height: { xs: 300, sm: 400, md: 500 },
+                backgroundColor: 'grey.100',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-            />
-          </Fade>
-        </Box>
+            >
+              <Box
+                component="img"
+                src={images[currentImageIndex]}
+                alt={`${title} - Image ${currentImageIndex + 1}`}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  backgroundColor: 'grey.50',
+                }}
+              />
 
-        {/* Footer avec actions */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)',
-            p: 3,
-            zIndex: 10,
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {/* Image Counter et Thumbnails */}
-            <Box>
+              {/* Navigation des images */}
               {images.length > 1 && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="white" sx={{ mb: 1 }}>
-                    {currentIndex + 1} / {images.length}
-                  </Typography>
-                  
-                  {!isMobile && (
-                    <Box sx={{ display: 'flex', gap: 1, maxWidth: 400, overflowX: 'auto' }}>
-                      {images.map((image, index) => (
-                        <Box
-                          key={index}
-                          component="img"
-                          src={image}
-                          alt={`Thumbnail ${index + 1}`}
-                          onClick={() => setCurrentIndex(index)}
-                          sx={{
-                            width: 60,
-                            height: 40,
-                            objectFit: 'cover',
-                            cursor: 'pointer',
-                            borderRadius: 1,
-                            border: currentIndex === index ? '2px solid #14B8A6' : '2px solid transparent',
-                            opacity: currentIndex === index ? 1 : 0.7,
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              opacity: 1,
-                              transform: 'scale(1.05)',
-                            },
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  )}
-                </Box>
+                <>
+                  <IconButton
+                    onClick={handlePreviousImage}
+                    sx={{
+                      position: 'absolute',
+                      left: 16,
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      },
+                    }}
+                  >
+                    <ArrowBackIcon />
+                  </IconButton>
+
+                  <IconButton
+                    onClick={handleNextImage}
+                    sx={{
+                      position: 'absolute',
+                      right: 16,
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      },
+                    }}
+                  >
+                    <ArrowForwardIcon />
+                  </IconButton>
+
+                  {/* Indicateur de position */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                      color: 'white',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {currentImageIndex + 1} / {images.length}
+                  </Box>
+                </>
               )}
             </Box>
-            
-            {/* Action Button */}
-            {link && (
-              <Button
-                variant="contained"
-                startIcon={<OpenInNewIcon />}
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
+
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <Box
                 sx={{
-                  backgroundColor: '#14B8A6',
-                  '&:hover': {
-                    backgroundColor: '#0F766E',
-                  },
-                  fontWeight: 600,
-                  px: 3,
+                  display: 'flex',
+                  gap: 1,
+                  p: 2,
+                  overflowX: 'auto',
+                  backgroundColor: 'grey.50',
                 }}
               >
-                En savoir plus
-              </Button>
+                {images.map((image, index) => (
+                  <Card
+                    key={index}
+                    elevation={0}
+                    sx={{
+                      minWidth: 80,
+                      width: 80,
+                      height: 60,
+                      cursor: 'pointer',
+                      border: '2px solid',
+                      borderColor: index === currentImageIndex ? 'primary.main' : 'transparent',
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                      },
+                      transition: 'border-color 0.2s ease-in-out',
+                    }}
+                    onClick={() => handleThumbnailClick(index)}
+                  >
+                    <CardMedia
+                      component="img"
+                      image={image}
+                      alt={`Thumbnail ${index + 1}`}
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  </Card>
+                ))}
+              </Box>
             )}
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              height: 200,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'grey.50',
+            }}
+          >
+            <Typography color="text.secondary">
+              Aucune image disponible
+            </Typography>
+          </Box>
+        )}
+
+        {/* Informations */}
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ mb: 3 }}>
+            <Chip
+              label={region}
+              size="small"
+              color="primary"
+              sx={{ mb: 2 }}
+            />
+            
+            <Typography
+              variant="body1"
+              sx={{
+                lineHeight: 1.6,
+                color: 'text.secondary',
+              }}
+            >
+              {description}
+            </Typography>
           </Box>
         </Box>
       </DialogContent>
+
+      <DialogActions sx={{ p: 3, pt: 0 }}>
+        <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+          <Button onClick={onClose} sx={{ minWidth: 100 }}>
+            Fermer
+          </Button>
+          
+          {link && (
+            <Button
+              variant="contained"
+              startIcon={<LaunchIcon />}
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                minWidth: 150,
+                flex: 1,
+              }}
+            >
+              En savoir plus
+            </Button>
+          )}
+        </Stack>
+      </DialogActions>
     </Dialog>
   );
 };
