@@ -44,16 +44,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Debug logs
-  React.useEffect(() => {
-    console.log('🖼️ ImageGalleryModal - Props reçues:', {
-      open,
-      title,
-      imagesCount: images.length,
-      images: images.slice(0, 2), // Afficher les 2 premières URLs
-    });
-  }, [open, title, images]);
-
   const handlePreviousImage = () => {
     setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
   };
@@ -72,11 +62,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
   // Si pas ouvert, ne rien rendre
   if (!open) {
-    console.log('🖼️ Modal fermée, pas de rendu');
     return null;
   }
-
-  console.log('🖼️ Rendu de la modal avec:', { open, title, imagesCount: images.length });
 
   return (
     <Dialog
@@ -144,8 +131,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                   objectFit: 'contain',
                   backgroundColor: 'grey.50',
                 }}
-                onLoad={() => console.log('🖼️ Image chargée:', images[currentImageIndex])}
-                onError={() => console.log('❌ Erreur chargement image:', images[currentImageIndex])}
               />
 
               {/* Navigation des images */}

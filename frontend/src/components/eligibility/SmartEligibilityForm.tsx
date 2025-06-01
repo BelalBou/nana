@@ -4,9 +4,6 @@ import {
   Box, 
   Typography, 
   Button, 
-  RadioGroup, 
-  Radio, 
-  FormControlLabel, 
   TextField,
   FormControl,
   InputLabel,
@@ -19,7 +16,6 @@ import {
   Fade,
   LinearProgress,
   Snackbar,
-  useTheme,
   Stack,
   Chip,
 } from '@mui/material';
@@ -63,7 +59,6 @@ interface NextQuestionResponse {
 }
 
 const SmartEligibilityForm: React.FC = () => {
-  const theme = useTheme();
   const { regions } = useRegions();
   
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -81,6 +76,7 @@ const SmartEligibilityForm: React.FC = () => {
   const [showCopySnackbar, setShowCopySnackbar] = useState(false);
   const [selectedAid, setSelectedAid] = useState<Aid | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [loadingAidDetails, setLoadingAidDetails] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
@@ -118,6 +114,49 @@ const SmartEligibilityForm: React.FC = () => {
     }
   };
 
+  // Nouvelle fonction pour récupérer les détails complets d'une aide
+  const fetchAidDetails = async (aidId: number) => {
+    try {
+      setLoadingAidDetails(true);
+      const url = `${API_BASE_URL}/eligibility/${aidId}`;
+      console.log('🔗 URL appelée:', url);
+      console.log('🔗 API_BASE_URL:', API_BASE_URL);
+      console.log('🔗 aidId:', aidId);
+      
+      const response = await axios.get<Aid>(url);
+      console.log('🔍 Détails de l\'aide récupérés:', {
+        id: response.data.id,
+        title: response.data.title,
+        imagesCount: response.data.images?.length || 0,
+        images: response.data.images
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails:', error);
+      console.error('🔗 URL qui a échoué:', `${API_BASE_URL}/eligibility/${aidId}`);
+      return null;
+    } finally {
+      setLoadingAidDetails(false);
+    }
+  };
+
+  // Fonction pour ouvrir la modal avec les détails complets
+  const openAidModal = async (aid: Aid) => {
+    console.log('🔍 Ouverture modal pour aide:', aid.title, 'ID:', aid.id);
+    
+    // Récupérer les détails complets avec les images
+    const fullAidDetails = await fetchAidDetails(aid.id);
+    
+    if (fullAidDetails) {
+      setSelectedAid(fullAidDetails);
+      setGalleryOpen(true);
+    } else {
+      // En cas d'erreur, utiliser les données partielles
+      setSelectedAid(aid);
+      setGalleryOpen(true);
+    }
+  };
+
   const fetchNextQuestion = async () => {
     try {
       setLoading(true);
@@ -130,7 +169,8 @@ const SmartEligibilityForm: React.FC = () => {
           question: response.data.question,
           remainingAids: response.data.remainingAids || 0
         });
-        setCurrentQuestionIndex(prev => prev + 1);
+        // NE PAS incrémenter ici pour la première question
+        // setCurrentQuestionIndex(prev => prev + 1);
       } else {
         // Plus de questions, récupérer les résultats finaux
         const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
@@ -184,6 +224,10 @@ const SmartEligibilityForm: React.FC = () => {
         setCurrentQuestionIndex(prev => prev + 1);
         setPendingAnswer(null);
       } else {
+        // Aucune question suivante, on a terminé
+        // Marquer comme terminé AVANT d'incrémenter
+        setIsComplete(true);
+        
         const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
           answers: newAnswers 
         });
@@ -194,7 +238,6 @@ const SmartEligibilityForm: React.FC = () => {
           images: aid.images?.slice(0, 2) // Afficher les 2 premières URLs
         })));
         setFinalResults(resultsResponse.data);
-        setIsComplete(true);
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -541,10 +584,7 @@ const SmartEligibilityForm: React.FC = () => {
                           cursor: 'pointer',
                           overflow: 'hidden',
                         }}
-                        onClick={() => {
-                          setSelectedAid(aid);
-                          setGalleryOpen(true);
-                        }}
+                        onClick={() => openAidModal(aid)}
                       >
                         <Box
                           component="img"
@@ -671,22 +711,16 @@ const SmartEligibilityForm: React.FC = () => {
                       <Stack direction="row" spacing={1}>
                         <Button
                           variant="contained"
-                          onClick={() => {
-                            console.log('🔍 Bouton cliqué pour aide:', aid.title);
-                            console.log('🔍 Images disponibles:', aid.images);
-                            console.log('🔍 État galleryOpen avant:', galleryOpen);
-                            setSelectedAid(aid);
-                            setGalleryOpen(true);
-                            console.log('🔍 État galleryOpen après:', true);
-                          }}
+                          onClick={() => openAidModal(aid)}
                           fullWidth
+                          disabled={loadingAidDetails}
                           sx={{
                             borderRadius: 2,
                             py: 1.5,
                             fontWeight: 600,
                           }}
                         >
-                          {aid.images && aid.images.length > 0 ? 'Voir les détails' : 'En savoir plus'}
+                          {loadingAidDetails ? 'Chargement...' : 'Voir les détails'}
                         </Button>
                         
                         {aid.link && (

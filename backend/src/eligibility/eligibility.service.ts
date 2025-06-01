@@ -142,24 +142,35 @@ export class EligibilityService {
   }
 
   async getResults(answers: Record<string, any>): Promise<Aid[]> {
-    const eligibleAids = await this.prisma.aid.findMany({
-      where: { active: true },
-      include: {
-        conditions: {
-          include: {
-            question: true,
-          },
-        },
-      },
-    });
-
-    const results = eligibleAids.filter(aid => this.isAidStillEligible(aid, answers));
+    console.log('🔍 getResults appelée avec les réponses:', answers);
     
-    console.log('🎯 Résultats finaux avec images:', results.map(aid => ({
+    const aids = await this.getEligibleAidsByRegion(answers.region);
+    console.log('🗃️ Aides récupérées pour la région:', aids.length);
+
+    // Utiliser la même logique stricte que getFinalResults
+    const results = aids.filter(aid => 
+      aid.conditions.every(condition => {
+        const answer = answers[condition.question.field];
+        
+        // Si pas de réponse pour cette condition ET qu'on est à la fin du questionnaire,
+        // alors l'aide n'est PAS éligible (logique stricte)
+        if (answer === undefined) {
+          console.log(`❌ Aide "${aid.title}" exclue : pas de réponse pour ${condition.question.field}`);
+          return false;
+        }
+
+        const isValid = this.checkCondition(condition, answer);
+        if (!isValid) {
+          console.log(`❌ Aide "${aid.title}" exclue : condition non remplie pour ${condition.question.field} (${answer} vs ${condition.value})`);
+        }
+        return isValid;
+      })
+    );
+
+    console.log('🎯 Résultats finaux filtrés:', results.map(aid => ({
       id: aid.id,
       title: aid.title,
-      imagesCount: aid.images?.length || 0,
-      images: aid.images || []
+      imagesCount: aid.images?.length || 0
     })));
     
     return results;
@@ -169,5 +180,40 @@ export class EligibilityService {
   async checkEligibility(answers: any) {
     const userAnswers = answers.answers || answers;
     return this.getFinalResults(userAnswers);
+  }
+
+  // Nouvelle méthode pour récupérer une aide spécifique avec toutes ses données
+  async getAidById(id: number) {
+    const aid = await this.prisma.aid.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        link: true,
+        region: true,
+        images: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+        conditions: {
+          include: {
+            question: true,
+          },
+        },
+      },
+    });
+
+    if (!aid) {
+      throw new Error(`Aide avec l'ID ${id} non trouvée`);
+    }
+
+    console.log(`🔍 Aide récupérée (ID: ${id}):`, {
+      title: aid.title,
+      imagesCount: aid.images?.length || 0,
+      images: aid.images
+    });
+
+    return aid;
   }
 }
