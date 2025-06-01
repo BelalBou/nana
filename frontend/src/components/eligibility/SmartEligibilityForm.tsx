@@ -660,8 +660,12 @@ const SmartEligibilityForm: React.FC = () => {
                         <Button
                           variant="contained"
                           onClick={() => {
+                            console.log('🔍 Bouton cliqué pour aide:', aid.title);
+                            console.log('🔍 Images disponibles:', aid.images);
+                            console.log('🔍 État galleryOpen avant:', galleryOpen);
                             setSelectedAid(aid);
                             setGalleryOpen(true);
+                            console.log('🔍 État galleryOpen après:', true);
                           }}
                           fullWidth
                           sx={{
@@ -766,6 +770,22 @@ const SmartEligibilityForm: React.FC = () => {
           onClose={() => setShowCopySnackbar(false)}
           message="Email copié dans le presse-papier !"
         />
+
+        {/* Modal de galerie d'images - DEBUG */}
+        <ImageGalleryModal
+          open={galleryOpen}
+          onClose={() => {
+            console.log('🔍 Fermeture de la modal');
+            setGalleryOpen(false);
+            setSelectedAid(null);
+          }}
+          images={selectedAid?.images || []}
+          title={selectedAid?.title || ''}
+          description={selectedAid?.description || ''}
+          region={selectedAid?.region || ''}
+          link={selectedAid?.link}
+        />
+
       </Container>
     );
   }
@@ -963,21 +983,19 @@ const SmartEligibilityForm: React.FC = () => {
         </Paper>
       </Fade>
 
-      {/* Modal de galerie d'images */}
-      {selectedAid && (
-        <ImageGalleryModal
-          open={galleryOpen}
-          onClose={() => {
-            setGalleryOpen(false);
-            setSelectedAid(null);
-          }}
-          images={selectedAid.images || []}
-          title={selectedAid.title}
-          description={selectedAid.description}
-          region={selectedAid.region}
-          link={selectedAid.link}
-        />
-      )}
+      {/* Modal de galerie d'images - AUSSI ICI */}
+      <ImageGalleryModal
+        open={galleryOpen}
+        onClose={() => {
+          setGalleryOpen(false);
+          setSelectedAid(null);
+        }}
+        images={selectedAid?.images || []}
+        title={selectedAid?.title || ''}
+        description={selectedAid?.description || ''}
+        region={selectedAid?.region || ''}
+        link={selectedAid?.link}
+      />
     </Container>
   );
 };

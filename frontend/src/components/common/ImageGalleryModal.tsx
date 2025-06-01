@@ -44,6 +44,16 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Debug logs
+  React.useEffect(() => {
+    console.log('🖼️ ImageGalleryModal - Props reçues:', {
+      open,
+      title,
+      imagesCount: images.length,
+      images: images.slice(0, 2), // Afficher les 2 premières URLs
+    });
+  }, [open, title, images]);
+
   const handlePreviousImage = () => {
     setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
   };
@@ -60,6 +70,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     setCurrentImageIndex(0);
   }, [open]);
 
+  // Si pas ouvert, ne rien rendre
+  if (!open) {
+    console.log('🖼️ Modal fermée, pas de rendu');
+    return null;
+  }
+
+  console.log('🖼️ Rendu de la modal avec:', { open, title, imagesCount: images.length });
+
   return (
     <Dialog
       open={open}
@@ -67,6 +85,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
       maxWidth="lg"
       fullWidth
       fullScreen={isMobile}
+      aria-labelledby="image-gallery-title"
       sx={{
         '& .MuiDialog-paper': {
           borderRadius: isMobile ? 0 : 3,
@@ -85,10 +104,18 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
           borderColor: 'grey.200',
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography 
+          id="image-gallery-title"
+          variant="h6" 
+          sx={{ fontWeight: 600 }}
+        >
           {title}
         </Typography>
-        <IconButton onClick={onClose} size="small">
+        <IconButton 
+          onClick={onClose} 
+          size="small"
+          aria-label="Fermer la galerie"
+        >
           <CloseIcon />
         </IconButton>
       </Box>
@@ -117,6 +144,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                   objectFit: 'contain',
                   backgroundColor: 'grey.50',
                 }}
+                onLoad={() => console.log('🖼️ Image chargée:', images[currentImageIndex])}
+                onError={() => console.log('❌ Erreur chargement image:', images[currentImageIndex])}
               />
 
               {/* Navigation des images */}
@@ -124,6 +153,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                 <>
                   <IconButton
                     onClick={handlePreviousImage}
+                    aria-label="Image précédente"
                     sx={{
                       position: 'absolute',
                       left: 16,
@@ -139,6 +169,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
                   <IconButton
                     onClick={handleNextImage}
+                    aria-label="Image suivante"
                     sx={{
                       position: 'absolute',
                       right: 16,
@@ -184,6 +215,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                   overflowX: 'auto',
                   backgroundColor: 'grey.50',
                 }}
+                role="tablist"
+                aria-label="Miniatures des images"
               >
                 {images.map((image, index) => (
                   <Card
@@ -204,11 +237,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                       transition: 'border-color 0.2s ease-in-out',
                     }}
                     onClick={() => handleThumbnailClick(index)}
+                    role="tab"
+                    aria-selected={index === currentImageIndex}
+                    aria-label={`Voir l'image ${index + 1}`}
                   >
                     <CardMedia
                       component="img"
                       image={image}
-                      alt={`Thumbnail ${index + 1}`}
+                      alt={`Miniature ${index + 1}`}
                       sx={{
                         width: '100%',
                         height: '100%',
@@ -261,7 +297,11 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
       <DialogActions sx={{ p: 3, pt: 0 }}>
         <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
-          <Button onClick={onClose} sx={{ minWidth: 100 }}>
+          <Button 
+            onClick={onClose} 
+            sx={{ minWidth: 100 }}
+            aria-label="Fermer la modal"
+          >
             Fermer
           </Button>
           
@@ -276,6 +316,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                 minWidth: 150,
                 flex: 1,
               }}
+              aria-label="Ouvrir le lien officiel dans un nouvel onglet"
             >
               En savoir plus
             </Button>
