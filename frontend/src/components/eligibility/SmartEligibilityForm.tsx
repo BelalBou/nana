@@ -136,6 +136,12 @@ const SmartEligibilityForm: React.FC = () => {
         const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
           answers 
         });
+        console.log('📥 Résultats reçus du backend (première fois):', resultsResponse.data.map(aid => ({
+          id: aid.id,
+          title: aid.title,
+          imagesCount: aid.images?.length || 0,
+          images: aid.images?.slice(0, 2)
+        })));
         setFinalResults(resultsResponse.data);
         setIsComplete(true);
       }
@@ -181,6 +187,12 @@ const SmartEligibilityForm: React.FC = () => {
         const resultsResponse = await axios.post<Aid[]>(`${API_BASE_URL}/eligibility/results`, { 
           answers: newAnswers 
         });
+        console.log('📥 Résultats reçus du backend:', resultsResponse.data.map(aid => ({
+          id: aid.id,
+          title: aid.title,
+          imagesCount: aid.images?.length || 0,
+          images: aid.images?.slice(0, 2) // Afficher les 2 premières URLs
+        })));
         setFinalResults(resultsResponse.data);
         setIsComplete(true);
       }

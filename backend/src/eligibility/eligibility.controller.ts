@@ -18,7 +18,16 @@ export class EligibilityController {
   }
 
   @Post('results')
-  async getFinalResults(@Body() body: { answers: Record<string, any> }) {
-    return this.eligibilityService.getFinalResults(body.answers);
+  async getResults(@Body() body: { answers: Record<string, any> }) {
+    const results = await this.eligibilityService.getResults(body.answers);
+    
+    console.log('📤 Envoi des résultats au frontend:', results.map(aid => ({
+      id: aid.id,
+      title: aid.title,
+      imagesCount: aid.images?.length || 0,
+      hasImages: !!aid.images && aid.images.length > 0
+    })));
+    
+    return results;
   }
 }

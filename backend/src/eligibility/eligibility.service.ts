@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Aid } from 'generated/prisma';
 
 interface EligibilityStep {
   question: any;
@@ -138,6 +139,30 @@ export class EligibilityService {
       link: aid.link,
       region: aid.region
     }));
+  }
+
+  async getResults(answers: Record<string, any>): Promise<Aid[]> {
+    const eligibleAids = await this.prisma.aid.findMany({
+      where: { active: true },
+      include: {
+        conditions: {
+          include: {
+            question: true,
+          },
+        },
+      },
+    });
+
+    const results = eligibleAids.filter(aid => this.isAidStillEligible(aid, answers));
+    
+    console.log('🎯 Résultats finaux avec images:', results.map(aid => ({
+      id: aid.id,
+      title: aid.title,
+      imagesCount: aid.images?.length || 0,
+      images: aid.images || []
+    })));
+    
+    return results;
   }
 
   // Méthode de compatibilité avec l'ancien système
