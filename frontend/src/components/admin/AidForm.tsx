@@ -125,8 +125,10 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
       // Extraire le nom du fichier de l'URL
       const fileName = imageUrl.split('/').pop();
       
-      if (token && fileName && fileName.includes('aids/')) {
-        await axios.delete(`${API_BASE_URL}/upload/image/${fileName}`, {
+      if (token && fileName) {
+        // Encoder le nom du fichier pour gérer les caractères spéciaux
+        const encodedFileName = encodeURIComponent(fileName);
+        await axios.delete(`${API_BASE_URL}/upload/image/${encodedFileName}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

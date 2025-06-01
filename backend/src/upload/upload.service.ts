@@ -35,8 +35,17 @@ export class UploadService {
 
   async deleteImage(fileName: string): Promise<void> {
     try {
-      await minioClient.removeObject(BUCKET_NAME, fileName);
+      // Décoder le nom du fichier au cas où il serait encodé
+      const decodedFileName = decodeURIComponent(fileName);
+      
+      // Si le fichier ne contient pas le préfixe aids/, l'ajouter
+      const objectName = decodedFileName.startsWith('aids/') 
+        ? decodedFileName 
+        : `aids/${decodedFileName}`;
+        
+      await minioClient.removeObject(BUCKET_NAME, objectName);
     } catch (error) {
+      console.error('Erreur lors de la suppression de l\'image:', error);
       throw new Error(`Erreur lors de la suppression: ${error.message}`);
     }
   }

@@ -69,7 +69,7 @@ export class UploadController {
     }
   }
 
-  @Delete('image/:fileName(*)')
+  @Delete('image/:fileName')
   @HttpCode(HttpStatus.OK)
   async deleteImage(@Param('fileName') fileName: string) {
     try {
