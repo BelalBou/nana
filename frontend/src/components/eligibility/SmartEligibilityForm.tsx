@@ -33,6 +33,7 @@ import {
   ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 import { useRegions } from '../../hooks/useRegions';
+import ImageGalleryModal from '../common/ImageGalleryModal';
 
 interface Question {
   id: number;
@@ -53,6 +54,7 @@ interface Aid {
   description: string;
   link: string;
   region: string;
+  images?: string[];
 }
 
 interface NextQuestionResponse {
@@ -77,6 +79,8 @@ const SmartEligibilityForm: React.FC = () => {
   const [answerHistory, setAnswerHistory] = useState<Record<string, any>[]>([]);
   const [pendingAnswer, setPendingAnswer] = useState<any>(null);
   const [showCopySnackbar, setShowCopySnackbar] = useState(false);
+  const [selectedAid, setSelectedAid] = useState<Aid | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
 
@@ -499,13 +503,12 @@ const SmartEligibilityForm: React.FC = () => {
                     key={aid.id}
                     elevation={0}
                     sx={{
-                      p: 4,
+                      overflow: 'hidden',
                       border: '1px solid',
                       borderColor: 'success.200',
                       borderRadius: 3,
                       background: 'linear-gradient(145deg, #FFFFFF 0%, #F0FDF4 100%)',
                       position: 'relative',
-                      overflow: 'hidden',
                       '&::before': {
                         content: '""',
                         position: 'absolute',
@@ -517,53 +520,178 @@ const SmartEligibilityForm: React.FC = () => {
                       },
                     }}
                   >
-                    <Typography 
-                      variant="h5" 
-                      gutterBottom
-                      sx={{ 
-                        fontWeight: 600,
-                        color: 'success.dark',
-                        mb: 2,
-                      }}
-                    >
-                      {aid.title}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body1" 
-                      color="text.secondary" 
-                      paragraph
-                      sx={{ lineHeight: 1.6 }}
-                    >
-                      {aid.description}
-                    </Typography>
-                    
-                    <Box sx={{ mb: 3 }}>
-                      <Chip
-                        label={aid.region}
-                        size="small"
+                    {/* Image principale */}
+                    {aid.images && aid.images.length > 0 && (
+                      <Box
                         sx={{
-                          backgroundColor: 'primary.100',
-                          color: 'primary.dark',
-                          fontWeight: 500,
+                          position: 'relative',
+                          height: 200,
+                          cursor: 'pointer',
+                          overflow: 'hidden',
                         }}
-                      />
+                        onClick={() => {
+                          setSelectedAid(aid);
+                          setGalleryOpen(true);
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={aid.images[0]}
+                          alt={aid.title}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.3s ease-in-out',
+                            '&:hover': {
+                              transform: 'scale(1.05)',
+                            },
+                          }}
+                        />
+                        
+                        {/* Overlay avec nombre d'images */}
+                        {aid.images.length > 1 && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 12,
+                              right: 12,
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              color: 'white',
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: 2,
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}
+                          >
+                            📸 {aid.images.length}
+                          </Box>
+                        )}
+                        
+                        {/* Overlay de survol */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'backgroundColor 0.2s ease-in-out',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'white',
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              px: 2,
+                              py: 1,
+                              borderRadius: 2,
+                              opacity: 0,
+                              transition: 'opacity 0.2s ease-in-out',
+                              '.MuiPaper-root:hover &': {
+                                opacity: 1,
+                              },
+                            }}
+                          >
+                            Cliquer pour voir toutes les images
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
+
+                    <Box sx={{ p: 4 }}>
+                      <Typography 
+                        variant="h5" 
+                        gutterBottom
+                        sx={{ 
+                          fontWeight: 600,
+                          color: 'success.dark',
+                          mb: 2,
+                        }}
+                      >
+                        {aid.title}
+                      </Typography>
+                      
+                      <Typography 
+                        variant="body1" 
+                        color="text.secondary" 
+                        paragraph
+                        sx={{ lineHeight: 1.6 }}
+                      >
+                        {aid.description}
+                      </Typography>
+                      
+                      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Chip
+                          label={aid.region}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'primary.100',
+                            color: 'primary.dark',
+                            fontWeight: 500,
+                          }}
+                        />
+                        {aid.images && aid.images.length > 1 && (
+                          <Chip
+                            label={`${aid.images.length} images`}
+                            size="small"
+                            sx={{
+                              backgroundColor: 'info.100',
+                              color: 'info.dark',
+                              fontWeight: 500,
+                            }}
+                          />
+                        )}
+                      </Box>
+                      
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant="contained"
+                          onClick={() => {
+                            setSelectedAid(aid);
+                            setGalleryOpen(true);
+                          }}
+                          fullWidth
+                          sx={{
+                            borderRadius: 2,
+                            py: 1.5,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {aid.images && aid.images.length > 0 ? 'Voir les détails' : 'En savoir plus'}
+                        </Button>
+                        
+                        {aid.link && (
+                          <Button
+                            variant="outlined"
+                            href={aid.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                              borderRadius: 2,
+                              py: 1.5,
+                              fontWeight: 600,
+                              minWidth: 'auto',
+                              px: 2,
+                            }}
+                          >
+                            🔗
+                          </Button>
+                        )}
+                      </Stack>
                     </Box>
-                    
-                    <Button
-                      variant="contained"
-                      href={aid.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      fullWidth
-                      sx={{
-                        borderRadius: 2,
-                        py: 1.5,
-                        fontWeight: 600,
-                      }}
-                    >
-                      En savoir plus
-                    </Button>
                   </Paper>
                 ))}
               </Box>
