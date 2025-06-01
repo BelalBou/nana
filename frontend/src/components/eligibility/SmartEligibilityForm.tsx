@@ -962,6 +962,22 @@ const SmartEligibilityForm: React.FC = () => {
           </Stack>
         </Paper>
       </Fade>
+
+      {/* Modal de galerie d'images */}
+      {selectedAid && (
+        <ImageGalleryModal
+          open={galleryOpen}
+          onClose={() => {
+            setGalleryOpen(false);
+            setSelectedAid(null);
+          }}
+          images={selectedAid.images || []}
+          title={selectedAid.title}
+          description={selectedAid.description}
+          region={selectedAid.region}
+          link={selectedAid.link}
+        />
+      )}
     </Container>
   );
 };
