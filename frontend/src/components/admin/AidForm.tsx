@@ -87,38 +87,53 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
 
   // Fonction pour compresser l'image
   const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
       img.onload = () => {
-        // Calculer les nouvelles dimensions
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Dessiner l'image redimensionnée
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        // Convertir en blob puis en fichier avec nom nettoyé
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const cleanFileName = sanitizeFileName(file.name);
-            const compressedFile = new File([blob], cleanFileName, {
-              type: file.type,
-              lastModified: Date.now(),
-            });
-            resolve(compressedFile);
-          } else {
-            resolve(file);
+        try {
+          // Calculer les nouvelles dimensions
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
           }
-        }, file.type, quality);
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Dessiner l'image redimensionnée
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Convertir en blob puis en fichier avec nom nettoyé
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const cleanFileName = sanitizeFileName(file.name);
+              const compressedFile = new File([blob], cleanFileName, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              // Si la compression échoue, retourner le fichier original avec nom nettoyé
+              const cleanFileName = sanitizeFileName(file.name);
+              const fallbackFile = new File([file], cleanFileName, {
+                type: file.type,
+                lastModified: file.lastModified,
+              });
+              resolve(fallbackFile);
+            }
+          }, file.type, quality);
+        } catch (error) {
+          console.error('Erreur lors de la compression:', error);
+          reject(error);
+        }
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Impossible de charger l\'image pour la compression'));
       };
       
       img.src = URL.createObjectURL(file);
@@ -158,19 +173,31 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
       if (shouldCompress) {
         setUploadProgress(10);
         
-        // Compression plus agressive pour les gros fichiers
-        const maxWidth = file.size > 3 * 1024 * 1024 ? 800 : 1200; // 800px si > 3MB, sinon 1200px
-        const quality = file.size > 3 * 1024 * 1024 ? 0.6 : 0.8; // Qualité réduite si > 3MB
-        
-        fileToUpload = await compressImage(fileToUpload, maxWidth, quality);
-        console.log(`Image compressée: ${file.size} -> ${fileToUpload.size} bytes`);
-        console.log(`Compression: ${maxWidth}px, qualité: ${quality}`);
+        try {
+          // Compression plus agressive pour les gros fichiers
+          const maxWidth = file.size > 3 * 1024 * 1024 ? 800 : 1200;
+          const quality = file.size > 3 * 1024 * 1024 ? 0.6 : 0.8;
+          
+          fileToUpload = await compressImage(fileToUpload, maxWidth, quality);
+          console.log(`Image compressée: ${file.size} -> ${fileToUpload.size} bytes`);
+          console.log(`Compression: ${maxWidth}px, qualité: ${quality}`);
+          
+          // Si la compression n'a pas réduit la taille, essayer une compression plus agressive
+          if (fileToUpload.size >= file.size * 0.9) {
+            console.log('Compression peu efficace, tentative plus agressive...');
+            fileToUpload = await compressImage(fileToUpload, 600, 0.5);
+            console.log(`Recompression: ${file.size} -> ${fileToUpload.size} bytes`);
+          }
+        } catch (compressionError) {
+          console.error('Erreur compression:', compressionError);
+          // En cas d'erreur de compression, continuer avec le fichier original nettoyé
+        }
       } else {
         console.log(`Image conservée sans compression: ${fileToUpload.size} bytes`);
       }
 
       // Vérification finale de la taille après compression
-      if (fileToUpload.size > 5 * 1024 * 1024) { // 5MB max après compression
+      if (fileToUpload.size > 5 * 1024 * 1024) {
         setUploadError('L\'image est encore trop lourde après compression. Essayez avec une image plus petite.');
         return;
       }
@@ -183,7 +210,6 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
       const config = {
         headers: {
           'Authorization': `Bearer ${token}`,
-          // Pas de Content-Type pour laisser le navigateur gérer
         },
         timeout: 60000,
         onUploadProgress: (progressEvent: { loaded: number; total?: number }) => {
@@ -194,6 +220,7 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
         },
       };
 
+      console.log('Tentative d\'upload vers:', `${API_BASE_URL}/upload/image`);
       const response = await axios.post<UploadResponse>(`${API_BASE_URL}/upload/image`, uploadFormData, config);
 
       setUploadProgress(100);
@@ -209,7 +236,9 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
       
       let errorMessage = 'Erreur lors de l\'upload de l\'image';
       
-      if (error.code === 'ECONNABORTED') {
+      if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Erreur réseau: Impossible de joindre le serveur. Vérifiez votre connexion internet.';
+      } else if (error.code === 'ECONNABORTED') {
         errorMessage = 'Timeout: L\'upload a pris trop de temps. Essayez avec une image plus petite.';
       } else if (error.response?.status === 400) {
         errorMessage = error.response?.data?.message || 
@@ -221,11 +250,10 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
         errorMessage = error.response.data.message;
       }
       
-      setUploadError(`${errorMessage} (Status: ${error.response?.status || 'Unknown'})`);
+      setUploadError(`${errorMessage} ${error.response?.status ? `(Status: ${error.response.status})` : ''}`);
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      // Reset input
       event.target.value = '';
     }
   };
