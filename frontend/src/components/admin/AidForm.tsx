@@ -167,26 +167,37 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
         lastModified: file.lastModified,
       });
 
-      // Compresser TOUJOURS les images > 1MB pour éviter les problèmes MinIO
-      const shouldCompress = file.size > 1024 * 1024; // 1MB
+      // Compresser TOUJOURS les images > 512KB pour éviter les problèmes en production
+      const shouldCompress = file.size > 512 * 1024; // 512KB au lieu de 1MB
       
       if (shouldCompress) {
         setUploadProgress(10);
         
         try {
-          // Compression plus agressive pour les gros fichiers
-          const maxWidth = file.size > 3 * 1024 * 1024 ? 800 : 1200;
-          const quality = file.size > 3 * 1024 * 1024 ? 0.6 : 0.8;
+          // Compression beaucoup plus agressive pour la production
+          let maxWidth = 1000;
+          let quality = 0.7;
+          
+          // Très agressif pour les fichiers > 2MB (qui posent problème en prod)
+          if (file.size > 2 * 1024 * 1024) {
+            maxWidth = 600;
+            quality = 0.5;
+          }
+          // Agressif pour les fichiers > 1MB  
+          else if (file.size > 1024 * 1024) {
+            maxWidth = 800;
+            quality = 0.6;
+          }
           
           fileToUpload = await compressImage(fileToUpload, maxWidth, quality);
           console.log(`Image compressée: ${file.size} -> ${fileToUpload.size} bytes`);
           console.log(`Compression: ${maxWidth}px, qualité: ${quality}`);
           
-          // Si la compression n'a pas réduit la taille, essayer une compression plus agressive
-          if (fileToUpload.size >= file.size * 0.9) {
-            console.log('Compression peu efficace, tentative plus agressive...');
-            fileToUpload = await compressImage(fileToUpload, 600, 0.5);
-            console.log(`Recompression: ${file.size} -> ${fileToUpload.size} bytes`);
+          // Si encore > 1.5MB après compression, compression ultra-agressive
+          if (fileToUpload.size > 1.5 * 1024 * 1024) {
+            console.log('Fichier encore lourd, compression ultra-agressive...');
+            fileToUpload = await compressImage(fileToUpload, 400, 0.4);
+            console.log(`Ultra-compression: -> ${fileToUpload.size} bytes`);
           }
         } catch (compressionError) {
           console.error('Erreur compression:', compressionError);
@@ -196,8 +207,8 @@ const AidForm: React.FC<AidFormProps> = ({ aid, onSubmit, onCancel }) => {
         console.log(`Image conservée sans compression: ${fileToUpload.size} bytes`);
       }
 
-      // Vérification finale de la taille après compression
-      if (fileToUpload.size > 5 * 1024 * 1024) {
+      // Vérification finale plus stricte pour la production
+      if (fileToUpload.size > 2 * 1024 * 1024) { // 2MB max au lieu de 5MB
         setUploadError('L\'image est encore trop lourde après compression. Essayez avec une image plus petite.');
         return;
       }
